@@ -17,7 +17,9 @@ SOURCES += \
     src/openglshape.cpp \
     cs123_lib/resourceloader.cpp \
     cs123_lib/errorchecker.cpp \
-    glew-1.10.0/src/glew.c
+    glew-1.10.0/src/glew.c \
+    src/Databinding.cpp \
+    src/Settings.cpp
 
 HEADERS += \
     src/mainwindow.h \
@@ -25,7 +27,9 @@ HEADERS += \
     src/openglshape.h \
     cs123_lib/resourceloader.h \
     cs123_lib/errorchecker.h \
-    glew-1.10.0/include/GL/glew.h
+    glew-1.10.0/include/GL/glew.h \
+    src/Databinding.h \
+    src/Settings.h
 
 FORMS += src/mainwindow.ui
 

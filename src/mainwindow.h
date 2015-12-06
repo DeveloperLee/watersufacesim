@@ -4,6 +4,7 @@
 #include <QMainWindow>
 #include <QList>
 #include "glwidget.h"
+#include "Databinding.h"
 
 namespace Ui {
     class MainWindow;
@@ -19,10 +20,21 @@ public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
 
+protected:
+    virtual void changeEvent(QEvent *e);
+    virtual void closeEvent(QCloseEvent *e);
+
 private:
+    void dataBind();
+
+    QList<DataBinding*> m_bindings;
+    QList<QButtonGroup*> m_buttonGroups;
     Ui::MainWindow *m_ui;
     GLWidget *m_glWidget;
 
+public slots:
+    void settingsChanged();
+    void fileOpen();
 };
 
 #endif // MAINWINDOW_H

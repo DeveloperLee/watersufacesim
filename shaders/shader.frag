@@ -1,13 +1,10 @@
 #version 400 core
 
-#define INTERSECTION_THRESHOLD 0.1
-#define RENDER_CLOUDS 1
-#define OCTAVES 7
-#define TRACE_STEPS 120
+#define TRACE_STEPS 140
 
 uniform ivec2 resolution;           // Screen resolution
 uniform mat4 fragMVP;                // MVP matrix for handling camera rotation
-uniform mat3 motionMatrix1;
+//uniform mat3 motionMatrix1;
 uniform float currentTime;           // Current time in seconds
 uniform float cloudThickness;  // Thinkness of the cloud
 uniform bool renderFog;                 // True: apply fog, False: doesn't apply fog
@@ -15,10 +12,14 @@ uniform bool renderCloud;
 uniform sampler2D sampler;           // Texture sampler
 
 float waterlevel = 30.0;        // height of the water
-float large_waterH = 1.0; // change to adjust the "heavy" waves (set to 0.0 to have a very still ocean :)
+float large_waterH = .9; // change to adjust the "heavy" waves (set to 0.0 to have a very still ocean :)
 float small_waterH = .5; // change to adjust the small waves
 float diff = 0.;
 float sparse = 0.99;
+float waterOctaves = 8;
+float rainOctaves = 12;
+float cloudOctaves = 30;
+float march_far = 500.;
 
 vec3 fogcolor    = vec3( 0.5, 0.5, 0.5);
 vec3 suncolor   = vec3( 1.0, 0.9, 0.7 );
@@ -62,7 +63,7 @@ float noise(vec2 p)
   return texture(sampler,p / 256.).x;
 }
 
-// 3d noise function
+// trilinear interpolation for generating clouds
 float noise(vec3 v)
 {
     vec3 p = floor(v);
@@ -84,7 +85,6 @@ float starNoise(vec3 p)
 
 mat3 m = mat3( 0.00,  1.60,  1.20, -1.60,  0.72, -0.96, -1.20, -0.96,  1.28 );
 
-// Fractional Brownian motion
 float fbm3D( vec3 p )
 {
   float f = .5*noise( p );
@@ -94,7 +94,6 @@ float fbm3D( vec3 p )
   return f;
 }
 
-// Fractional Brownian motion
 float fbm2D( vec2 p )
 {
   float f = .5*noise( p);
@@ -121,17 +120,17 @@ float waterH(vec2 p)
   vec2 shift2 = vec2(currentTime) * vec2(.17,-.10);
 
   float wave = 0.0;
-  wave += sin(p.x*0.021  + shift2.x)*4.5;
-  wave += sin(p.x*0.0172+p.y*0.010 + shift2.x*1.121)*4.0;
-  wave -= sin(p.x*0.00104+p.y*0.005 + shift2.x*0.121)*4.0;
+  wave += sin(p.x*0.021  + shift2.x)*2.;
+  wave += sin(p.x*0.0172+p.y*0.010 + shift2.x*1.121)*3.0;
+  wave -= sin(p.x*0.00104+p.y*0.005 + shift2.x*0.121)*4.;
   wave += sin(p.x*0.02221+p.y*0.01233+shift2.x*3.437)*5.0;
-  wave += sin(p.x*0.03112+p.y*0.01122+shift2.x*4.269)*2.5 ;
+  wave += sin(p.x*0.03112+p.y*0.01122+shift2.x*4.269)*2.5;
   wave *= large_waterH;
   wave -= fbm2D(p*0.004-shift2*.5)*small_waterH*24.;
 
   float amp = 6.*small_waterH;
   shift1 *= .3;
-  for (int i = 0; i < OCTAVES; i++)
+  for (int i = 0; i < waterOctaves; i++)
   {
     wave -= abs(sin((noise(p*0.01+shift1)-.5)*3.14))*amp;
     amp *= .51;
@@ -176,7 +175,7 @@ float trace_cloud(vec3 ro, vec3 rd )
 
       vec2 shift = vec2( currentTime*80.0, currentTime*60.0 );
       float sum = 0.0;
-      for (int q=0; q<30; q++)
+      for (int q=0; q<cloudOctaves; q++)
       {
         float c = (1000.-ro.y) / rd.y;// cloud distance
         vec3 cpos = ro + c*rd + vec3(shift.x*3.,0.,shift.y*3.0); // cloud position
@@ -191,52 +190,62 @@ float trace_cloud(vec3 ro, vec3 rd )
   }
 }
 
-bool march(vec3 rStart, vec3 rDirection, float sundot, out float fog, out float dist)
+//Core ray march function, this function returns true if the ray
+//eventually hits the ocean, otherwise returns false (hits the sky)
+bool raymarch(vec3 ro, vec3 rd, out float dist)
 {
-  float h = 20.0;
-  float t = 0.0;
-  float st = 1.0;
-  float alpha = 0.1;
-  float asum = 0.0;
-  vec3 p = rStart;
+    float t, h = 0.;
 
-  for( int s = 0; s < TRACE_STEPS; ++s )
-  {
+    //The distance that ray marches each iteration.
+    //The step is dynamically adjusted for exp. when the ray is look toward sky
+    //or the marched point is relatively far away from where itself emits
+    float step = 1.;
 
-    if( t>500.0 ){
-        st = 4.;
+    //Step factor
+    float f = 1.;
+
+    //The current position of the ray
+    vec3 pos = ro;
+
+    for(int s = 0; s < 150; ++s){
+
+        pos = ro + t * rd;
+        h = map(pos);
+
+        //Terminate ray marching if either an intersection is found
+        //or it exceeds the far limit
+        if(h < .1 || pos.y > march_far){
+            dist = t;
+            return (h < 10.) ? true : false;
+        }
+
+        //Dynamically adjust the ray marching step
+        //1.If the ray travels far away
+        //2.If we look toward the sky
+        //3.If we are looking toward the ocean, the closer the ray and ocean
+        //the smaller the marching step is.
+
+        //** Condition 1 **//
+        if(t > 600.){
+           step = 4.5;
+        }
+
+        //** Condition 2 **//
+        if(rd.y > 0.){
+            f = 35.;
+        }
+
+        //** Condition 3 **//
+        else{
+           f = h;
+        }
+
+        t += f * step;
     }
 
-    p = rStart + t*rDirection; // calc current ray position
+    dist = t;
 
-    h = map(p);
-
-    if( h < INTERSECTION_THRESHOLD)
-    {
-      dist = t;
-      fog = asum;
-      return true;
-    }
-
-    if( p.y>450.0 )
-      break;
-
-    // speed up ray if possible...
-    if(rDirection.y > 0.0){
-      t += 30.0 * st;
-    }else{
-      t += max(1.0,1.0*h)*st;
-    }
-  }
-
-  dist = t;
-  fog = asum;
-
-  if (h<10.0){
-      return true;
-  }
-
-  return false;
+    return false;
 }
 
 //Update the camera position according to the user input.
@@ -323,7 +332,7 @@ vec4 cloud(vec3 camerapos, vec3 raydirection){
 
     vec2 shift = vec2(currentTime) * vec2(10., 8.);
     vec4 sum = vec4(0,0,0,0);
-    for (int q=0; q<50; q++)
+    for (int q=0; q<cloudOctaves; q++)
     {
       float c = (float(q)*cloudThickness+500.-camerapos.y) / raydirection.y; // cloud height
       vec3 cpos = camerapos + c*raydirection + vec3(831.0, 321.0+float(q)*.15-shift.x*0.2, 1330.0+shift.y*3.0); // cloud position
@@ -443,6 +452,44 @@ vec3 renderWater(vec3 pos, float dist, vec3 rd)
     return water;
 }
 
+vec3 renderRain(Camera cam, vec3 rd, float dist,vec3 light)
+{
+    vec3 p = cam.pos + dist * rd;
+    vec3 raincol = vec3(0.);
+    vec2 viewport =  gl_FragCoord.xy / resolution.xy;
+    vec4 newViewport = fragMVP * vec4(viewport, 0., 0.);
+
+    //Inital t for rain marching ray
+    float t = 1.;
+
+    //rainOctaves represents how many layers are taken into account when reder rain drop
+    for(int i=0;i<rainOctaves;++i){
+       vec3 curpos = cam.pos + t * rd;
+       if(curpos.z < p.z){
+           float snowthickness = .9;
+           float rainthickness = .1;
+           float seq = pow(t, 1.1);
+           //The direction of rain fall x-->Left or right / y-->back or toward
+           float snow = 23.5;
+           float rain =  31.5;
+           vec2 st = seq * (newViewport.xy * vec2(resolution.x / resolution.y , rainthickness) + vec2(-currentTime * .1 + newViewport.y * .3, currentTime * .5));
+           seq = abs((texture(sampler, st * .5, -100.).x + texture(sampler, st * .284, 100.).y));
+           seq = clamp(pow(seq * .5, rain) * 140. , 0., .5);
+
+           //Basic brightness of the rain drop
+           vec3 brightness = vec3(.25);
+           float dot = clamp(dot(rd,light),.4,1.) * .2;
+           brightness += dot;
+           raincol += brightness * seq;
+       }
+       //March distance for the current ray
+       t += 3.;
+    }
+
+    raincol = clamp(raincol, 0., 1.);
+    return raincol;
+}
+
 void main()
 {
 
@@ -456,12 +503,11 @@ void main()
 
   //Final color
   vec3 col = vec3(0.);
-  float fog=0.0, dist=0.0;
-
+  float dist = 0.;
 
   //The march function returns true if the ray eventually hits the water surface --> then we have to render water,
   //convertly, march returns false if the ray lost in the sky --> then we have to render sky.
-  if (!march(cam.pos,rd,diffuse, fog, dist))
+  if(!raymarch(cam.pos, rd, dist))
   {
      //Let the mvp matrix transform the original viewport into a new viewport when we
      //rotate the camera and use the new viewport to generate star noise so that
@@ -472,7 +518,7 @@ void main()
   }
   else
   {
-    vec3 wpos = cam.pos + dist*rd;
+    vec3 wpos = cam.pos + dist * rd;
 
     //****BUG HERE****//
     //Can not generate the terrain for now.
@@ -501,12 +547,19 @@ void main()
 //      color *= (1.8*lDif) * lCol;
 //      col = color;
     }
-}
+
+  }
+
+  vec3 rainColor = renderRain(cam,rd,dist,light);
+  col += rainColor;
 
   //**APPLY FOG AT LAST IF FOD EFFECT IS ENABLED**//
   //First line -> global constant fog
   //Second line -> lighting fog
   //Third line -> Height-based fog (***BUG***)
+
+
+
   if(renderFog){
 //      col = distFog(col, dist);
       col = realFog(col, dist, rd, light);
