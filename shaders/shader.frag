@@ -32,8 +32,10 @@ vec3 reflskycolor = vec3(0.025, 0.10, 0.20);
 vec3 watercolor   = vec3(0.2, 0.25, 0.3);
 
 float sunshift = sin(currentTime * .1);
+vec2 cloudshift = vec2(currentTime) * vec2(80.,50.);
 
 vec3 light = normalize( vec3(0.3, clamp(sunshift,-1.,.3),  0.8) );
+
 
 mat2 fbm2Dmat2 = mat2(.4,-.3,.4,.3);
 
@@ -169,16 +171,15 @@ float map(vec3 p)
     return p.y - waterH(p.xz);
 }
 
-float trace_cloud(vec3 ro, vec3 rd )
+float shadow(vec3 ro, vec3 rd )
 {
   if(renderCloud){
 
-      vec2 shift = vec2( currentTime*80.0, currentTime*60.0 );
       float sum = 0.0;
       for (int q=0; q<cloudOctaves; q++)
       {
         float c = (1000.-ro.y) / rd.y;// cloud distance
-        vec3 cpos = ro + c*rd + vec3(shift.x*3.,0.,shift.y*3.0); // cloud position
+        vec3 cpos = ro + c*rd + vec3(cloudshift.x*3.,0.,cloudshift.y*3.0); // cloud position
         float alpha = smoothstep(0.8, 1.0, fbm3D( (cpos*0.0015) )); // cloud density
         sum += (1.0-sum)*alpha; // alpha saturation
         if (sum>0.98)
@@ -328,14 +329,13 @@ vec3 heightFog(vec3 col, float dist, vec3 ro, vec3 rd)
     return mix( col, fc, fogAmount );
 }
 
-vec4 cloud(vec3 camerapos, vec3 raydirection){
+vec4 rendercloud(vec3 camerapos, vec3 raydirection){
 
-    vec2 shift = vec2(currentTime) * vec2(10., 8.);
     vec4 sum = vec4(0,0,0,0);
-    for (int q=0; q<cloudOctaves; q++)
+    for (int q=0; q < cloudOctaves; ++q)
     {
-      float c = (float(q)*cloudThickness+500.-camerapos.y) / raydirection.y; // cloud height
-      vec3 cpos = camerapos + c*raydirection + vec3(831.0, 321.0+float(q)*.15-shift.x*0.2, 1330.0+shift.y*3.0); // cloud position
+      float c = (float(q)*cloudThickness+600.-camerapos.y) / raydirection.y; // cloud height
+      vec3 cpos = camerapos + c*raydirection + vec3(831.0, 321.0+float(q)*.15-cloudshift.x*0.2, 1330.0+cloudshift.y*3.0); // cloud position
       float alpha = smoothstep(0.5, 1.0, fbm3D( cpos*0.0015 ))*.9; // fractal cloud density
       vec3 localcolor = mix(vec3( 1.1, 1.05, 1.0 ), 0.7*vec3( 0.4,0.4,0.3 ), alpha); // density color white->gray
       alpha = (1.0-sum.w)*alpha; // alpha/density saturation (the more a cloud layer's density, the more the higher layers will be hidden)
@@ -368,7 +368,7 @@ vec3 getWaterNormal(vec3 pos, float t)
 //                          terrainH(pos.xz-eps.yx) - terrainH(pos.xz+eps.yx)));
 //}
 
-//Render the st
+//Render the star when night falls
 vec3 renderStar(vec3 p, bool day)
 {
     vec3 star = vec3(0.);
@@ -415,7 +415,7 @@ vec3 renderSky(vec3 ro, vec3 rd, float coefd, vec3 p)
     sky += sunhazecolor * pow( coefd, 10.0 );
 
     if(renderCloud){
-        cloudcolor = cloud(ro, rd);
+        cloudcolor = rendercloud(ro, rd);
         sky = mix(sky, cloudcolor.xyz, cloudcolor.w * (1. - blend));
     }
 
@@ -433,11 +433,14 @@ vec3 renderWater(vec3 pos, float dist, vec3 rd)
 {
     vec3 normal = getWaterNormal(pos, dist);
 
+    //Final water color
     vec3 water = vec3(0.);
 
+    //Reflection of the ray after hitting the ocean surface
     rd = reflect (rd, normal);
+
     float refl = 1.0-clamp(dot(rd,vec3(0.0, 1.0, 0.0)),0.0,1.0);
-    float shadow = smoothstep(0.2, 1.0, trace_cloud(pos+20.0*rd,rd))*.7+.3;
+    float shadow = smoothstep(0.2, 1.0, shadow(pos+20.0*rd,rd))*.7+.3;
     float wsky   = refl * shadow;
     float wwater = (1.0-refl) * shadow;
     float diffuse = clamp(dot(rd,light),-.2,1.);
@@ -463,9 +466,11 @@ vec3 renderRain(Camera cam, vec3 rd, float dist,vec3 light)
     float t = 1.;
 
     //rainOctaves represents how many layers are taken into account when reder rain drop
-    for(int i=0;i<rainOctaves;++i){
+    for(int i = 0;i < rainOctaves; ++i){
        vec3 curpos = cam.pos + t * rd;
+
        if(curpos.z < p.z){
+
            float snowthickness = .9;
            float rainthickness = .1;
            float seq = pow(t, 1.1);
@@ -482,6 +487,7 @@ vec3 renderRain(Camera cam, vec3 rd, float dist,vec3 light)
            brightness += dot;
            raincol += brightness * seq;
        }
+
        //March distance for the current ray
        t += 3.;
     }
