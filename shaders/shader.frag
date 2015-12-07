@@ -1,7 +1,5 @@
 #version 400 core
 
-#define WEATHER_EFFECT 0
-#define RAIN 1
 
 //---------------------Uniforms--------------------------//
 
@@ -32,7 +30,7 @@ float sparse = 0.995;
 float waterOctaves = 8;
 float terrainOctaves = 10;
 float rainOctaves = 12;
-float cloudOctaves = 90;
+float cloudOctaves = 100;
 float march_far = 500.;
 
 //---------------------Colors--------------------------//
@@ -148,7 +146,7 @@ float waterH(vec2 p)
   wave += sin(p.x*0.02  + shift2.x)*2.;
   wave += sin(p.x*0.02+p.y*0.01 + shift2.x*1.12) * 3.0;
   wave -= sin(p.x*0.01+p.y*0.001 + shift2.x*0.12) * 4.;
-  wave += sin(p.x*.003+p.y*.0025 + shift2.x * 0.15) * 5.;
+  wave += sin(p.x*0.03112+p.y*0.01122+shift2.x*4.269)*2.5;
   wave *= bigwave;
 
   //Consider small waves
@@ -268,7 +266,7 @@ bool raymarch(vec3 ro, vec3 rd, out float dist)
 //Update the camera position according to the user input.
 vec3 camRotate( float time )
 {
-  vec4 cam = fragMVP * vec4(camX, 0.0, 120*time, 1.0);
+  vec4 cam = fragMVP * vec4(camX, 0.0, 1000.*time, 1.0);
   return cam.xyz;
 }
 
@@ -385,15 +383,15 @@ vec4 rendercloud(vec3 ro, vec3 rd){
 
       //If the alpha value is big enough, which means that the contribution from higher layers
       //can be ignored, we exit the render loop (can speed up the cloud render process)
-      if (cloudcol.w > 0.97) break;
+      if (cloudcol.w > 0.99) break;
     }
 
     float drakness = smoothstep(0.7, 1.0, cloudcol.w);
     cloudcol.rgb /= cloudcol.w;
 
     float diffuse = clamp(dot(rd,light), 0., 1.);
-    cloudcol.rgb -= 0.6 * vec3(0.8, 0.75, 0.7) * pow(diffuse,10.) * drakness;
-    cloudcol.rgb += 0.2 * suncolor * pow(diffuse,15.0) * (1.0-drakness);
+    cloudcol.rgb -= 0.8 * vec3(0.8, 0.75, 0.7) * pow(diffuse,5.) * drakness;
+    cloudcol.rgb += 0.2 * suncolor * pow(diffuse,20.0) * (1.0-drakness);
 
     return cloudcol;
 }
@@ -523,7 +521,7 @@ vec3 renderWeather(Camera cam, vec3 rd, float dist,vec3 light)
     vec3 raincol = vec3(0.);
     vec3 p = cam.pos + dist * rd;
     vec2 viewport =  gl_FragCoord.xy / resolution.xy;
-    vec4 newViewport = fragMVP * vec4(viewport, 0., 0.);
+    vec3 newViewport = cam.trans * vec3(viewport, 0.);
 
     //Inital t for rain marching ray
     float t = 1.;

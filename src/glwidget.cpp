@@ -12,8 +12,8 @@ GLWidget::GLWidget(QGLFormat format, QWidget *parent)
     : QGLWidget(format, parent), m_program(0),
       m_angleX(0), m_angleY(0.5f),m_angleZ(0), m_zoom(1.f),
       m_timer(this),m_fps(40.0f),
-      m_renderFog(true), m_renderCloud(true), m_renderLens(true),
-      m_bigwave(3.0), m_smallwave(0.9), m_waveSpeed(glm::vec2(0.7,0.2)),
+      m_renderFog(true), m_renderCloud(true), m_renderLens(true), m_renderSnow(true),
+      m_bigwave(3.0), m_smallwave(0.9), m_waveSpeed(glm::vec2(0.17,-0.12)),
       m_cloudThickness(4.f), m_shadowhardness(0.95),
       m_camX(200.0), m_camY(100.0),m_wideAngle(0.9)
 {
