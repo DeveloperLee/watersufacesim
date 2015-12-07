@@ -12,13 +12,12 @@ GLWidget::GLWidget(QGLFormat format, QWidget *parent)
     : QGLWidget(format, parent), m_program(0),
       m_angleX(0), m_angleY(0.5f),m_angleZ(0), m_zoom(1.f),
       m_timer(this),m_fps(40.0f), m_renderFog(true), m_renderCloud(true),
-      m_cloudThickness(3.f)
+      m_cloudThickness(4.f)
 {
     connect(&m_timer, SIGNAL(timeout()), this, SLOT(tick()));
     m_timer.start(1000.0f / m_fps);
     m_screenDimension = glm::vec2(width(),height());
     m_shape = new OpenGLShape();
-
 }
 
 GLWidget::~GLWidget()

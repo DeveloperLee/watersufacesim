@@ -1,6 +1,7 @@
 #version 400 core
 
-#define TRACE_STEPS 140
+#define WEATHER_EFFECT 1
+#define RAIN 1
 
 uniform ivec2 resolution;           // Screen resolution
 uniform mat4 fragMVP;                // MVP matrix for handling camera rotation
@@ -11,30 +12,32 @@ uniform bool renderFog;                 // True: apply fog, False: doesn't apply
 uniform bool renderCloud;
 uniform sampler2D sampler;           // Texture sampler
 
+float march_steps = 150;
 float waterlevel = 30.0;        // height of the water
 float large_waterH = .9; // change to adjust the "heavy" waves (set to 0.0 to have a very still ocean :)
 float small_waterH = .5; // change to adjust the small waves
 float diff = 0.;
-float sparse = 0.99;
+float sparse = 0.995;
 float waterOctaves = 8;
 float rainOctaves = 12;
-float cloudOctaves = 30;
+float cloudOctaves = 90;
 float march_far = 500.;
 
+vec3 skycolor       = vec3(.53, .807, .9215);
+vec3 nightskycolor  = vec3(0.1, 0.2, 0.4);
+vec3 watercolor   = vec3(0.2, 0.25, 0.3);
 vec3 fogcolor    = vec3( 0.5, 0.5, 0.5);
 vec3 suncolor   = vec3( 1.0, 0.9, 0.7 );
 vec3 sunhazecolor = vec3(.77,.57,.432);
 vec3 nightSuncolor = vec3(151., 153., 155.) / 255.;
-
-vec3 skycolor       = vec3(.53, .807, .9215);
-vec3 nightskycolor  = vec3(0.1, 0.2, 0.4);
+vec3 darkcloud = vec3(.28, .28, .2);
 vec3 reflskycolor = vec3(0.025, 0.10, 0.20);
-vec3 watercolor   = vec3(0.2, 0.25, 0.3);
 
 float sunshift = sin(currentTime * .1);
 vec2 cloudshift = vec2(currentTime) * vec2(80.,50.);
 
-vec3 light = normalize( vec3(0.3, clamp(sunshift,-1.,.3),  0.8) );
+vec3 light = normalize( vec3(0.5, clamp(sunshift,-1.,.3),  0.5) );
+//vec3 light = normalize(fragMVP * (vec4(0.3 , clamp(sunshift, -1., .3), 0.8, 0.0))).xyz;
 
 
 mat2 fbm2Dmat2 = mat2(.4,-.3,.4,.3);
@@ -46,7 +49,7 @@ struct Camera{
     vec3 u,v,w; //u,v,w coordinate of the camera
 };
 
-out vec3 fragColor;      // Final output color for each pixel
+out vec3 fragColor;   // Final output color for each pixel
 
 // Hash function
 float hash(float n)
@@ -66,15 +69,16 @@ float noise(vec2 p)
 }
 
 // trilinear interpolation for generating clouds
-float noise(vec3 v)
+float noise(vec3 x)
 {
-    vec3 p = floor(v);
-    vec3 f = fract(v);
-    f = f*f*(3.-2.*f);
+    vec3 p  = floor(x);
+    vec3 f  = smoothstep(0.0, 1.0, fract(x));
+    float n = p.x + p.y*57.0 + 113.0*p.z;
 
-    vec2 uv = (p.xy+vec2(37.,17.)*p.z) + f.xy;
-    vec2 rg = texture( sampler, (uv+.5)/256., -100.).yx;
-   return mix(rg.x, rg.y, f.z);
+    return mix(mix(mix( hash(n+  0.0), hash(n+  1.0),f.x),
+       mix( hash(n+ 57.0), hash(n+ 58.0),f.x),f.y),
+       mix(mix( hash(n+113.0), hash(n+114.0),f.x),
+       mix( hash(n+170.0), hash(n+171.0),f.x),f.y),f.z);
 }
 
 float starNoise(vec3 p)
@@ -118,26 +122,31 @@ float waterH(vec2 p)
 {
   float height = waterlevel;
 
+  //
   vec2 shift1 = vec2(currentTime) * vec2(.08);
   vec2 shift2 = vec2(currentTime) * vec2(.17,-.10);
 
   float wave = 0.0;
-  wave += sin(p.x*0.021  + shift2.x)*2.;
-  wave += sin(p.x*0.0172+p.y*0.010 + shift2.x*1.121)*3.0;
-  wave -= sin(p.x*0.00104+p.y*0.005 + shift2.x*0.121)*4.;
-  wave += sin(p.x*0.02221+p.y*0.01233+shift2.x*3.437)*5.0;
-  wave += sin(p.x*0.03112+p.y*0.01122+shift2.x*4.269)*2.5;
+
+  //Consider large wave
+  wave += sin(p.x*0.02  + shift2.x)*2.;
+  wave += sin(p.x*0.02+p.y*0.01 + shift2.x*1.12) * 3.0;
+  wave -= sin(p.x*0.01+p.y*0.001 + shift2.x*0.12) * 4.;
+  wave += sin(p.x*.0025+p.y*.0025 + shift2.x * 0.15) * 5.;
   wave *= large_waterH;
+
+  //Consider small waves
   wave -= fbm2D(p*0.004-shift2*.5)*small_waterH*24.;
 
-  float amp = 6.*small_waterH;
-  shift1 *= .3;
+  //The initial amplitude for a small wave
+  //the amplitude decrease by half per octave
+  float amp = 6. * small_waterH;
   for (int i = 0; i < waterOctaves; i++)
   {
     wave -= abs(sin((noise(p*0.01+shift1)-.5)*3.14))*amp;
-    amp *= .51;
-    shift1 *= 1.841;
-    p *= fbm2Dmat2 * 3.7;
+    amp *= .5;
+    shift1 /= 3.;
+    p *= fbm2Dmat2 * 4.;
   }
 
   height += wave;
@@ -171,24 +180,25 @@ float map(vec3 p)
     return p.y - waterH(p.xz);
 }
 
-float shadow(vec3 ro, vec3 rd )
+//Shadow function for mapping the cloud shadow onto the water surface
+float shadow(vec3 ro, vec3 rd)
 {
-  if(renderCloud){
+   float height = 450.;
+   float h = 0.;
+   float shadow = 0.;
+   for(int layer = 0; layer < 10; ++ layer){
+      float dist = (h * 1. + height - ro.y) / rd.y;
+      vec3 cloudpos = ro + dist * rd;
+      vec3 shiftto = vec3(100. , height + layer * .15 - cloudshift.x * 0.01, 500. + cloudshift.y * 4.);
+      cloudpos += shiftto;
+      float darkness = smoothstep(0.5, 1.0, fbm3D(cloudpos * 0.0012)) * .9;
+      shadow += (1. - shadow) * darkness;
+      if(shadow > 0.95) break;
+      h += 100.;
+   }
 
-      float sum = 0.0;
-      for (int q=0; q<cloudOctaves; q++)
-      {
-        float c = (1000.-ro.y) / rd.y;// cloud distance
-        vec3 cpos = ro + c*rd + vec3(cloudshift.x*3.,0.,cloudshift.y*3.0); // cloud position
-        float alpha = smoothstep(0.8, 1.0, fbm3D( (cpos*0.0015) )); // cloud density
-        sum += (1.0-sum)*alpha; // alpha saturation
-        if (sum>0.98)
-            break;
-      }
-      return clamp( 1.0-sum, 0.0, 1.0 );
-  }else{
-    return 1.0;
-  }
+   if(renderCloud) return clamp(1 - shadow, 0., 1.);
+   else return 1.;
 }
 
 //Core ray march function, this function returns true if the ray
@@ -208,7 +218,7 @@ bool raymarch(vec3 ro, vec3 rd, out float dist)
     //The current position of the ray
     vec3 pos = ro;
 
-    for(int s = 0; s < 150; ++s){
+    for(int s = 0; s < march_steps; ++s){
 
         pos = ro + t * rd;
         h = map(pos);
@@ -329,26 +339,56 @@ vec3 heightFog(vec3 col, float dist, vec3 ro, vec3 rd)
     return mix( col, fc, fogAmount );
 }
 
-vec4 rendercloud(vec3 camerapos, vec3 raydirection){
+vec4 rendercloud(vec3 ro, vec3 rd){
 
-    vec4 sum = vec4(0,0,0,0);
-    for (int q=0; q < cloudOctaves; ++q)
+    vec4 cloudcol = vec4(0,0,0,0);
+
+    //Height of the cloud
+    float height = 450.;
+
+    //Increase octaves will decrease the rendering speed but with a higher quality
+    for (int layer = 0; layer < cloudOctaves; ++layer)
     {
-      float c = (float(q)*cloudThickness+600.-camerapos.y) / raydirection.y; // cloud height
-      vec3 cpos = camerapos + c*raydirection + vec3(831.0, 321.0+float(q)*.15-cloudshift.x*0.2, 1330.0+cloudshift.y*3.0); // cloud position
-      float alpha = smoothstep(0.5, 1.0, fbm3D( cpos*0.0015 ))*.9; // fractal cloud density
-      vec3 localcolor = mix(vec3( 1.1, 1.05, 1.0 ), 0.7*vec3( 0.4,0.4,0.3 ), alpha); // density color white->gray
-      alpha = (1.0-sum.w)*alpha; // alpha/density saturation (the more a cloud layer's density, the more the higher layers will be hidden)
-      sum += vec4(localcolor*alpha, alpha); // sum up weightened color
+      //Distance from origin of the ray to current cloud layer
+      //** P = RO + T * RD  --> T = (P - RO) / RD **//
+      float dist = (layer * 1. * cloudThickness + height - ro.y) / rd.y;
 
-      if (sum.w>0.44)
-        break;
+      //Real cloud layer position
+      vec3 cloudpos = ro + dist * rd;
+
+      //Shift direction of the current layer
+      //x --> Left - right shift
+      //y --> Up and down shift
+      //z --> Near and far shift
+      vec3 shiftto = vec3(100., height+ layer *.15 - cloudshift.x * 0.01, 500. + cloudshift.y * 4.0);
+
+      //Apply position shift to the original layer position
+      cloudpos += shiftto;
+
+      //Genrate random darkness value for the current cloud layer based on noise and fbm function
+      float darkness = smoothstep(0.5, 1.0, fbm3D( cloudpos * 0.0012 ))*.9;
+
+      //Interpolate between the white and darkcloud color
+      vec3 layercol = mix(vec3(1.05), darkcloud, darkness);
+
+      //Adjust darkness based on the accumulative cloud darkness
+      darkness *= (1.0 - cloudcol.w);
+
+      cloudcol += vec4(layercol * darkness, darkness);
+
+      //If the alpha value is big enough, which means that the contribution from higher layers
+      //can be ignored, we exit the render loop (can speed up the cloud render process)
+      if (cloudcol.w > 0.95) break;
     }
 
-    float alpha = smoothstep(0.7, 1.0, sum.w);
+    float drakness = smoothstep(0.7, 1.0, cloudcol.w);
+    cloudcol.rgb /= cloudcol.w;
 
-    sum.rgb /= sum.w;
-    return sum;
+    float diffuse = clamp(dot(rd,light), 0., 1.);
+    cloudcol.rgb -= 0.6 * vec3(0.8, 0.75, 0.7) * pow(diffuse,10.) * drakness;
+    cloudcol.rgb += 0.2 * suncolor * pow(diffuse,4.0) * (1.0-drakness);
+
+    return cloudcol;
 }
 
 //** Calculate water normal at the given position **//
@@ -439,26 +479,32 @@ vec3 renderWater(vec3 pos, float dist, vec3 rd)
     //Reflection of the ray after hitting the ocean surface
     rd = reflect (rd, normal);
 
-    float refl = 1.0-clamp(dot(rd,vec3(0.0, 1.0, 0.0)),0.0,1.0);
-    float shadow = smoothstep(0.2, 1.0, shadow(pos+20.0*rd,rd))*.7+.3;
-    float wsky   = refl * shadow;
-    float wwater = (1.0-refl) * shadow;
-    float diffuse = clamp(dot(rd,light),-.2,1.);
+    //How much does the sky contributes to the water color
+    //The normal of the sky plane is (0, 1, 0)
+    float skyreflection = 1.0-clamp(dot(rd,vec3(0.0, 1.0, 0.0)),0.0,1.0);
 
-    water = wsky*reflskycolor;
-    water += wwater*watercolor;
+    //Shadow created by moving cloud
+    float shadow = shadow(pos, rd);
+
+    float csky   = skyreflection * shadow;
+    float wwater = (1.0 - skyreflection) * shadow;
+    float diffuse = clamp(dot(rd,light),0.,1.);
+
+    water = csky * reflskycolor + wwater * watercolor;
     water += vec3(.003, .005, .005) * (pos.y-waterlevel+30.);
+
     // Sun
-    float wsunrefl = wsky*(0.5*pow( diffuse, 10.0 )+0.25*pow( diffuse, 3.5)+.75*pow( diffuse, 300.0));
-    water += vec3(1.5,1.3,1.0)*wsunrefl; // sun reflection
+    float wsunrefl = csky * (0.5*pow( diffuse, 10.0 )+0.25*pow( diffuse, 3.5)+.75*pow( diffuse, 300.0));
+    water += vec3(1.5,1.3,1.0) * wsunrefl; // sun reflection
 
     return water;
 }
 
 vec3 renderRain(Camera cam, vec3 rd, float dist,vec3 light)
-{
-    vec3 p = cam.pos + dist * rd;
+{ 
+#if WEATHER_EFFECT
     vec3 raincol = vec3(0.);
+    vec3 p = cam.pos + dist * rd;
     vec2 viewport =  gl_FragCoord.xy / resolution.xy;
     vec4 newViewport = fragMVP * vec4(viewport, 0., 0.);
 
@@ -470,16 +516,19 @@ vec3 renderRain(Camera cam, vec3 rd, float dist,vec3 light)
        vec3 curpos = cam.pos + t * rd;
 
        if(curpos.z < p.z){
-
-           float snowthickness = .9;
-           float rainthickness = .1;
+#if RAIN
+           float thickness = .1;
+           float chain = 31.5;
+#else
+           float thickness = .9;
+           float chain = 23.5;
+#endif
            float seq = pow(t, 1.1);
+
            //The direction of rain fall x-->Left or right / y-->back or toward
-           float snow = 23.5;
-           float rain =  31.5;
-           vec2 st = seq * (newViewport.xy * vec2(resolution.x / resolution.y , rainthickness) + vec2(-currentTime * .1 + newViewport.y * .3, currentTime * .5));
+           vec2 st = seq * (newViewport.xy * vec2(resolution.x / resolution.y , thickness) + vec2(-currentTime * .1 + newViewport.y * .3, currentTime * .5));
            seq = abs((texture(sampler, st * .5, -100.).x + texture(sampler, st * .284, 100.).y));
-           seq = clamp(pow(seq * .5, rain) * 140. , 0., .5);
+           seq = clamp(pow(seq * .5, chain) * 140. , 0., .5);
 
            //Basic brightness of the rain drop
            vec3 brightness = vec3(.25);
@@ -494,6 +543,9 @@ vec3 renderRain(Camera cam, vec3 rd, float dist,vec3 light)
 
     raincol = clamp(raincol, 0., 1.);
     return raincol;
+#else
+    return vec3(0.);
+#endif
 }
 
 void main()

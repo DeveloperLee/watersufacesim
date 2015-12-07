@@ -30,7 +30,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
 
     // resize the window to default size
-    resize(1000,600);
+    resize(700,500);
 
     // Bind the UI elements to their properties in the global settings object
     QList<QAction*> actions;
