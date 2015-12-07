@@ -1,27 +1,41 @@
 #version 400 core
 
-#define WEATHER_EFFECT 1
+#define WEATHER_EFFECT 0
 #define RAIN 1
 
-uniform ivec2 resolution;           // Screen resolution
-uniform mat4 fragMVP;                // MVP matrix for handling camera rotation
-//uniform mat3 motionMatrix1;
-uniform float currentTime;           // Current time in seconds
+//---------------------Uniforms--------------------------//
+
+uniform ivec2 resolution;      // Screen resolution
+uniform mat4 fragMVP;          // MVP matrix for handling camera rotation
+uniform float currentTime;     // Current time in seconds
 uniform float cloudThickness;  // Thinkness of the cloud
-uniform bool renderFog;                 // True: apply fog, False: doesn't apply fog
-uniform bool renderCloud;
-uniform sampler2D sampler;           // Texture sampler
+uniform float shadowHardness;  // Hardness of the shadow
+uniform float wideAngle;       // Wide angle of the camera
+uniform float camX;
+uniform float camY;
+uniform float bigwave;
+uniform float smallwave;
+uniform vec2 wavespeed;
+uniform bool renderFog;        // True: render fog, False: doesn't render
+uniform bool renderCloud;      // True: render cloud, False: doesn't render
+uniform bool renderLens;
+uniform bool renderSnow;
+uniform bool renderRain;
+uniform sampler2D noise_texture;     // Noise texture sampler
+uniform sampler2D terrain_texture;   // Terrain texture sampler
+
+//---------------------Parameters------------------------//
 
 float march_steps = 150;
-float waterlevel = 30.0;        // height of the water
-float large_waterH = .9; // change to adjust the "heavy" waves (set to 0.0 to have a very still ocean :)
-float small_waterH = .5; // change to adjust the small waves
 float diff = 0.;
 float sparse = 0.995;
 float waterOctaves = 8;
+float terrainOctaves = 10;
 float rainOctaves = 12;
 float cloudOctaves = 90;
 float march_far = 500.;
+
+//---------------------Colors--------------------------//
 
 vec3 skycolor       = vec3(.53, .807, .9215);
 vec3 nightskycolor  = vec3(0.1, 0.2, 0.4);
@@ -33,20 +47,21 @@ vec3 nightSuncolor = vec3(151., 153., 155.) / 255.;
 vec3 darkcloud = vec3(.28, .28, .2);
 vec3 reflskycolor = vec3(0.025, 0.10, 0.20);
 
-float sunshift = sin(currentTime * .1);
+//---------------------Movements------------------------//
+
+float sunshift = sin(currentTime * .05);
 vec2 cloudshift = vec2(currentTime) * vec2(80.,50.);
-
 vec3 light = normalize( vec3(0.5, clamp(sunshift,-1.,.3),  0.5) );
-//vec3 light = normalize(fragMVP * (vec4(0.3 , clamp(sunshift, -1., .3), 0.8, 0.0))).xyz;
-
-
 mat2 fbm2Dmat2 = mat2(.4,-.3,.4,.3);
+mat3 m = mat3( 0.00,  1.60,  1.20, -1.60,  0.72, -0.96, -1.20, -0.96,  1.28 );
+
 
 struct Camera{
 
     vec3 pos; //Current position of the camera
     vec3 look; //Look vector
     vec3 u,v,w; //u,v,w coordinate of the camera
+    mat3 trans;
 };
 
 out vec3 fragColor;   // Final output color for each pixel
@@ -65,7 +80,7 @@ float hash2(float n)
 // 2d noise function
 float noise(vec2 p)
 {
-  return texture(sampler,p / 256.).x;
+  return texture(noise_texture,p / 256.).x;
 }
 
 // trilinear interpolation for generating clouds
@@ -81,15 +96,13 @@ float noise(vec3 x)
        mix( hash(n+170.0), hash(n+171.0),f.x),f.y),f.z);
 }
 
-float starNoise(vec3 p)
+float starNoise(vec3 x)
 {
-    float xhash = hash2( p.x * 37.0 );
-    float yhash = hash2( p.y * 57.0 );
-    float zhash = hash2( p.z * 77.0 );
+    float xhash = hash2( x.x * 37.0 );
+    float yhash = hash2( x.y * 57.0 );
+    float zhash = hash2( x.z * 77.0 );
     return fract( xhash + yhash + zhash );
 }
-
-mat3 m = mat3( 0.00,  1.60,  1.20, -1.60,  0.72, -0.96, -1.20, -0.96,  1.28 );
 
 float fbm3D( vec3 p )
 {
@@ -106,6 +119,7 @@ float fbm2D( vec2 p )
   f += .25*noise( fbm2Dmat2 * p * 4.);
   f += .125*noise( fbm2Dmat2 * p * 4.);
   f += .0625*noise( fbm2Dmat2 * p * 4.);
+  f += .03125*noise( fbm2Dmat2 * p * 4.);
   return f;
 }
 
@@ -113,18 +127,20 @@ float fbm2D( vec2 p )
 vec2 adjustedViewport()
 {
     vec2 xy = -1.0 + 2.0 * gl_FragCoord.xy / resolution.xy;
-    vec2 viewport = xy*vec2(resolution.x/resolution.y * 1.5,1.0);
+    vec2 viewport = xy * vec2(resolution.x/resolution.y);
     return viewport;
 }
 
 // this calculates the water as a height of a given position
 float waterH(vec2 p)
 {
-  float height = waterlevel;
+  float height = 0.;
 
   //
-  vec2 shift1 = vec2(currentTime) * vec2(.08);
-  vec2 shift2 = vec2(currentTime) * vec2(.17,-.10);
+  vec2 shift1 = vec2(currentTime) * vec2(.2);
+
+  //Big wave shift
+  vec2 shift2 = vec2(currentTime) * wavespeed;
 
   float wave = 0.0;
 
@@ -132,15 +148,15 @@ float waterH(vec2 p)
   wave += sin(p.x*0.02  + shift2.x)*2.;
   wave += sin(p.x*0.02+p.y*0.01 + shift2.x*1.12) * 3.0;
   wave -= sin(p.x*0.01+p.y*0.001 + shift2.x*0.12) * 4.;
-  wave += sin(p.x*.0025+p.y*.0025 + shift2.x * 0.15) * 5.;
-  wave *= large_waterH;
+  wave += sin(p.x*.003+p.y*.0025 + shift2.x * 0.15) * 5.;
+  wave *= bigwave;
 
   //Consider small waves
-  wave -= fbm2D(p*0.004-shift2*.5)*small_waterH*24.;
+  wave -= fbm2D(p*0.004-shift2*.5)*smallwave*24.;
 
   //The initial amplitude for a small wave
   //the amplitude decrease by half per octave
-  float amp = 6. * small_waterH;
+  float amp = 6. * smallwave;
   for (int i = 0; i < waterOctaves; i++)
   {
     wave -= abs(sin((noise(p*0.01+shift1)-.5)*3.14))*amp;
@@ -153,24 +169,6 @@ float waterH(vec2 p)
   return height;
 }
 
-//float terrainH(vec2 x)
-//{
-//    vec2  p = x;
-//        float a = 0.0;
-//        float b = 1.0;
-//            vec2  d = vec2(0.0);
-//        for( int i=0; i<8; i++ )
-//        {
-//            vec3 n = noised(p);
-//            d += n.yz;
-//            a += b*n.x/(1.0+dot(d,d));
-//                    b *= 0.5;
-//            p = fbm2Dmat2 *p*2.0;
-//        }
-
-//   return .3*a+.5;
-//}
-
 float map(vec3 p)
 {
 //    float diff1 = p.y - terrainH(p.xz);
@@ -178,23 +176,31 @@ float map(vec3 p)
 //    diff = diff2 - diff1;
 //    return min(diff1,diff2);
     return p.y - waterH(p.xz);
+//      return p.y - terrainH(p.xz);
 }
 
-//Shadow function for mapping the cloud shadow onto the water surface
+//Soft shadow function for mapping the cloud shadow onto the water surface
+//The shift direction, velocity and noise function SHOULD BE SAME
+//with the function we used to compute the cloud color
+//The shadow is based on how much density the reflection ray is gained
+//during the shadowing mapping
+//** The uniformed parameter shadowHardness is used for controlling the hardness of the shadow
 float shadow(vec3 ro, vec3 rd)
 {
    float height = 450.;
-   float h = 0.;
+   float t = 0.;
+
+   //Final shadow value for the current reflected ray
    float shadow = 0.;
    for(int layer = 0; layer < 10; ++ layer){
-      float dist = (h * 1. + height - ro.y) / rd.y;
+      float dist = (t * 1. + height - ro.y) / rd.y;
       vec3 cloudpos = ro + dist * rd;
       vec3 shiftto = vec3(100. , height + layer * .15 - cloudshift.x * 0.01, 500. + cloudshift.y * 4.);
       cloudpos += shiftto;
       float darkness = smoothstep(0.5, 1.0, fbm3D(cloudpos * 0.0012)) * .9;
       shadow += (1. - shadow) * darkness;
-      if(shadow > 0.95) break;
-      h += 100.;
+      if(shadow > shadowHardness) break;
+      t += 100.;
    }
 
    if(renderCloud) return clamp(1 - shadow, 0., 1.);
@@ -262,7 +268,7 @@ bool raymarch(vec3 ro, vec3 rd, out float dist)
 //Update the camera position according to the user input.
 vec3 camRotate( float time )
 {
-  vec4 cam =  fragMVP * vec4(1500.0, 0.0, 1200.0*time, 1.0);
+  vec4 cam = fragMVP * vec4(camX, 0.0, 120*time, 1.0);
   return cam.xyz;
 }
 
@@ -271,16 +277,16 @@ Camera setupCam()
 {
   Camera cam;
 
-  float time = (currentTime)*.05;
+  float time = currentTime*.05;
   vec3 campos = camRotate( time );
-  vec3 targetpos = camRotate( time + 3. );
+  vec3 targetpos = camRotate(time + 3.);
 
   //Make sure the camera is above the sea level
-  campos.y = waterlevel + 200.;
+  campos.y = camY;
   targetpos.y = campos.y * .8;
 
   //w is the negative look vector
-  vec3 w = normalize(targetpos-campos);
+  vec3 w = -normalize(targetpos-campos);
 
   //** Be careful the PARAMETER SEQUENCE when use the cross:
   //x[1]*y[2]−y[1]*x[2]
@@ -304,6 +310,7 @@ Camera setupCam()
   cam.w = w;
   cam.v = v;
   cam.u = u;
+  cam.trans = mat3(u, v, w);
 
   return cam;
 }
@@ -313,7 +320,7 @@ Camera setupCam()
 //For exp, when dist=0, fogamount = 0 and therefore no fog is applied on this pixel.
 vec3 distFog(vec3 col, float dist)
 {
-    float fogAmount = 1.0-exp(-0.0005 * dist);
+    float fogAmount = smoothstep(0.,1.,1.0 - exp(-0.0002 * dist));
     col = mix( col, fogcolor, fogAmount );
     return col;
 }
@@ -378,7 +385,7 @@ vec4 rendercloud(vec3 ro, vec3 rd){
 
       //If the alpha value is big enough, which means that the contribution from higher layers
       //can be ignored, we exit the render loop (can speed up the cloud render process)
-      if (cloudcol.w > 0.95) break;
+      if (cloudcol.w > 0.97) break;
     }
 
     float drakness = smoothstep(0.7, 1.0, cloudcol.w);
@@ -386,7 +393,7 @@ vec4 rendercloud(vec3 ro, vec3 rd){
 
     float diffuse = clamp(dot(rd,light), 0., 1.);
     cloudcol.rgb -= 0.6 * vec3(0.8, 0.75, 0.7) * pow(diffuse,10.) * drakness;
-    cloudcol.rgb += 0.2 * suncolor * pow(diffuse,4.0) * (1.0-drakness);
+    cloudcol.rgb += 0.2 * suncolor * pow(diffuse,15.0) * (1.0-drakness);
 
     return cloudcol;
 }
@@ -399,14 +406,6 @@ vec3 getWaterNormal(vec3 pos, float t)
                          2.0*eps.x,
                          waterH(pos.xz-eps.yx) - waterH(pos.xz+eps.yx)));
 }
-
-//** Calculate terrain normal at the given position **//
-//vec3 getTerrianNormal(vec3 pos, float t){
-//    vec2 eps = vec2(.002 * t, .0);
-//    return normalize(vec3(terrainH(pos.xz-eps.xy) - terrainH(pos.xz+eps.xy),
-//                          2.0*eps.x,
-//                          terrainH(pos.xz-eps.yx) - terrainH(pos.xz+eps.yx)));
-//}
 
 //Render the star when night falls
 vec3 renderStar(vec3 p, bool day)
@@ -428,6 +427,25 @@ vec3 renderStar(vec3 p, bool day)
     return star;
 }
 
+vec3 renderLensEffect(Camera cam, vec2 viewport,vec3 rd)
+{
+   vec3 lenscol = vec3(0.);
+   float pi = 3.1415926;
+   float intensity = dot(light, cam.w) * .8;
+   vec3 pos = cam.trans * light;
+   if(intensity > 0.4){
+       intensity = pow(intensity, 8.) * .8;
+       float glare = max(dot(normalize(vec3(rd.x, rd.y+.3, rd.z)),light),0.0)*1.4;
+       float glare3 = max(1.0-length(pos.xy - viewport * 2.1), 0.0);
+       float glare4 = max(sin(smoothstep(-0.05, .4, length(pos.xy + viewport*2.5))*pi), 0.0);
+
+       lenscol += intensity * vec3(1.0, .0, .0)  * pow(glare, 12.5)*.07;
+       lenscol += intensity * suncolor * pow(glare3, 3.0)*4.0;
+       lenscol += intensity * vec3(.5, 1.0, 1.0) * pow(glare4, 33.9)*.7;
+   }
+
+   return lenscol;
+}
 
 vec3 renderSky(vec3 ro, vec3 rd, float coefd, vec3 p)
 {
@@ -491,7 +509,7 @@ vec3 renderWater(vec3 pos, float dist, vec3 rd)
     float diffuse = clamp(dot(rd,light),0.,1.);
 
     water = csky * reflskycolor + wwater * watercolor;
-    water += vec3(.003, .005, .005) * (pos.y-waterlevel+30.);
+    water += vec3(.003, .005, .005) * (pos.y+30.);
 
     // Sun
     float wsunrefl = csky * (0.5*pow( diffuse, 10.0 )+0.25*pow( diffuse, 3.5)+.75*pow( diffuse, 300.0));
@@ -500,9 +518,8 @@ vec3 renderWater(vec3 pos, float dist, vec3 rd)
     return water;
 }
 
-vec3 renderRain(Camera cam, vec3 rd, float dist,vec3 light)
+vec3 renderWeather(Camera cam, vec3 rd, float dist,vec3 light)
 { 
-#if WEATHER_EFFECT
     vec3 raincol = vec3(0.);
     vec3 p = cam.pos + dist * rd;
     vec2 viewport =  gl_FragCoord.xy / resolution.xy;
@@ -511,41 +528,44 @@ vec3 renderRain(Camera cam, vec3 rd, float dist,vec3 light)
     //Inital t for rain marching ray
     float t = 1.;
 
-    //rainOctaves represents how many layers are taken into account when reder rain drop
-    for(int i = 0;i < rainOctaves; ++i){
-       vec3 curpos = cam.pos + t * rd;
+    if(renderRain || renderSnow){
 
-       if(curpos.z < p.z){
-#if RAIN
-           float thickness = .1;
-           float chain = 31.5;
-#else
-           float thickness = .9;
-           float chain = 23.5;
-#endif
-           float seq = pow(t, 1.1);
+        //rainOctaves represents how many layers are taken into account when reder rain drop
+        for(int i = 0;i < rainOctaves; ++i){
+           vec3 curpos = cam.pos + t * rd;
 
-           //The direction of rain fall x-->Left or right / y-->back or toward
-           vec2 st = seq * (newViewport.xy * vec2(resolution.x / resolution.y , thickness) + vec2(-currentTime * .1 + newViewport.y * .3, currentTime * .5));
-           seq = abs((texture(sampler, st * .5, -100.).x + texture(sampler, st * .284, 100.).y));
-           seq = clamp(pow(seq * .5, chain) * 140. , 0., .5);
+           if(curpos.z < p.z){
 
-           //Basic brightness of the rain drop
-           vec3 brightness = vec3(.25);
-           float dot = clamp(dot(rd,light),.4,1.) * .2;
-           brightness += dot;
-           raincol += brightness * seq;
-       }
+             float chain,thickness = .0;
 
-       //March distance for the current ray
-       t += 3.;
+             if(renderRain){
+               thickness = .1;
+               chain = 31.5;
+             }else{
+               thickness = .9;
+               chain = 23.5;
+             }
+             float seq = pow(t, 1.1);
+
+               //The direction of rain fall x-->Left or right / y-->back or toward
+               vec2 st = seq * (newViewport.xy * vec2(resolution.x / resolution.y , thickness) + vec2(-currentTime * .1 + newViewport.y * .3, currentTime * .5));
+               seq = abs((texture(noise_texture, st * .5, -100.).x + texture(noise_texture, st * .284, 100.).y));
+               seq = clamp(pow(seq * .5, chain) * 140. , 0., .5);
+               //Basic brightness of the rain drop
+               vec3 brightness = vec3(.25);
+               float dot = clamp(dot(rd,light),.4,1.) * .2;
+               brightness += dot;
+               raincol += brightness * seq;
+           }
+
+           //March distance for the current ray
+           t += 3.;
+        }
+
+        raincol = clamp(raincol, 0., 1.);
     }
 
-    raincol = clamp(raincol, 0., 1.);
     return raincol;
-#else
-    return vec3(0.);
-#endif
 }
 
 void main()
@@ -555,7 +575,13 @@ void main()
 
   //Setup the camera for the current frame
   Camera cam = setupCam();
-  vec3 rd = normalize( viewport.x*cam.u + viewport.y*cam.v + 1.6*cam.w );
+
+  //** Important to do **//
+  //Before start ray marching, we have to transform the ray direction from
+  //the u,v,z coord to the camera coord
+  //the bigger z is, the less we can see through the screen
+//  vec3 rd = normalize( viewport.x*cam.u + viewport.y*cam.v +  wideAngle * cam.w );
+  vec3 rd = normalize(cam.trans * vec3(viewport, wideAngle));
 
   float diffuse = clamp(dot(rd,light),-.1, 1.);
 
@@ -582,34 +608,19 @@ void main()
     //Can not generate the terrain for now.
     //The idea is that we generate both water and terrain here, if the ray hits the ground surface
     //we know whether it hits on the water surface or terrain surface and render the pixel accordingly.
-    if(diff<2.){
+    if(diff == 0.){
        col = renderWater(wpos, dist, rd);
     }else{
-
-//        vec3 normal = getTerrianNormal(wpos, dist);
-//        // base rock formation colors
-//        vec3 lCol = vec3(1.0, 0.9, 0.7); // yellowish light
-//        vec3 color = mix( vec3(0.4, 0.1, 0.0), vec3(0.7, 0.6, 0.3), step(0.9, normal.y) );
-
-//       // layer noise (to produdce lighter color bands of rock)
-//       float n = 0.5;
-//       // rock layers should show through where nomals are NOT straight up
-//       color = mix( vec3(0.6, 0.5, 0.4), color, n*smoothstep(0.0, 0.7, normal.y) );
-
-//      // add in lighting and shadows
-//      float lAmb = clamp( 0.5 + 0.5 * normal.y, 0.0, 1.0); // ambient
-//      float lDif = clamp( dot( normal, light ), 0.0, 2.0); // diffuse
-
-
-//      color += (0.4*lAmb) * lCol;
-//      color *= (1.8*lDif) * lCol;
-//      col = color;
+//       col = renderTerrain(wpos, rd, dist);
     }
-
   }
 
-  vec3 rainColor = renderRain(cam,rd,dist,light);
+  vec3 rainColor = renderWeather(cam,rd,dist,light);
   col += rainColor;
+
+  if(renderLens){
+    col += renderLensEffect(cam, viewport, rd);
+  }
 
   //**APPLY FOG AT LAST IF FOD EFFECT IS ENABLED**//
   //First line -> global constant fog

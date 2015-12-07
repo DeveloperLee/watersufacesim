@@ -5,7 +5,7 @@ void OpenGLShape::create()
     // Generates a VBO and VAO for this shape.
     glGenBuffers(1, &m_vboID);
     glGenVertexArrays(1, &m_vaoID);
-    glGenTextures(1,&m_textureID);
+    glGenTextures(1, &m_textureID);
 }
 
 void OpenGLShape::destroy()
@@ -13,7 +13,7 @@ void OpenGLShape::destroy()
     // Deletes the VBO and VAO.
     glDeleteBuffers(1, &m_vboID);
     glDeleteVertexArrays(1, &m_vaoID);
-    glDeleteTextures(1,&m_textureID);
+    glDeleteTextures(1, &m_textureID);
 }
 
 void OpenGLShape::setVertexData(float *data, GLsizeiptr size, GLenum drawMode, int numVertices)
@@ -46,7 +46,10 @@ void OpenGLShape::bindTexture(QImage img){
 
     glBindTexture(GL_TEXTURE_2D,m_textureID);
     glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA,img.width(),img.height(),0,GL_RGBA,GL_UNSIGNED_BYTE,img.bits());
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glBindTexture(0,m_textureID);
 }
 

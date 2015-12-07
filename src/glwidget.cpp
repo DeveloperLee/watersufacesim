@@ -11,8 +11,11 @@
 GLWidget::GLWidget(QGLFormat format, QWidget *parent)
     : QGLWidget(format, parent), m_program(0),
       m_angleX(0), m_angleY(0.5f),m_angleZ(0), m_zoom(1.f),
-      m_timer(this),m_fps(40.0f), m_renderFog(true), m_renderCloud(true),
-      m_cloudThickness(4.f)
+      m_timer(this),m_fps(40.0f),
+      m_renderFog(true), m_renderCloud(true), m_renderLens(true),
+      m_bigwave(3.0), m_smallwave(0.9), m_waveSpeed(glm::vec2(0.7,0.2)),
+      m_cloudThickness(4.f), m_shadowhardness(0.95),
+      m_camX(200.0), m_camY(100.0),m_wideAngle(0.9)
 {
     connect(&m_timer, SIGNAL(timeout()), this, SLOT(tick()));
     m_timer.start(1000.0f / m_fps);
@@ -67,8 +70,18 @@ void GLWidget::paintGL()
     glUniform2i(glGetUniformLocation(m_program, "resolution"), m_screenDimension.x, m_screenDimension.y);
     glUniform1f(glGetUniformLocation(m_program, "currentTime"), m_time.elapsed() / 1000.0);
     glUniform1f(glGetUniformLocation(m_program, "cloudThickness"), m_cloudThickness);
+    glUniform1f(glGetUniformLocation(m_program, "shadowHardness"), m_shadowhardness);
+    glUniform1f(glGetUniformLocation(m_program, "bigwave"), m_bigwave);
+    glUniform1f(glGetUniformLocation(m_program, "smallwave"), m_smallwave);
+    glUniform2f(glGetUniformLocation(m_program, "wavespeed"), m_waveSpeed.x, m_waveSpeed.y);
+    glUniform1f(glGetUniformLocation(m_program, "camX"), m_camX);
+    glUniform1f(glGetUniformLocation(m_program, "camY"), m_camY);
+    glUniform1f(glGetUniformLocation(m_program, "wideAngle"), m_wideAngle);
     glUniform1i(glGetUniformLocation(m_program, "renderFog"), m_renderFog);
     glUniform1i(glGetUniformLocation(m_program, "renderCloud"), m_renderCloud);
+    glUniform1i(glGetUniformLocation(m_program, "renderLens"), m_renderLens);
+    glUniform1i(glGetUniformLocation(m_program, "renderSnow"), m_renderSnow);
+    glUniform1i(glGetUniformLocation(m_program, "renderRain"), m_renderRain);
     glUniformMatrix4fv(glGetUniformLocation(m_program, "fragMVP"), 1, GL_FALSE, glm::value_ptr(m_projection * m_fragView * m_model));
 
     // Render fullscreen quad
