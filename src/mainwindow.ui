@@ -54,13 +54,19 @@
        <height>241</height>
       </rect>
      </property>
+     <property name="minimumSize">
+      <size>
+       <width>200</width>
+       <height>0</height>
+      </size>
+     </property>
      <property name="accessibleName">
       <string notr="true"/>
      </property>
      <property name="title">
       <string>Effect Types</string>
      </property>
-     <widget class="QWidget" name="">
+     <widget class="QWidget" name="layoutWidget">
       <property name="geometry">
        <rect>
         <x>10</x>
@@ -72,6 +78,12 @@
       <layout class="QVBoxLayout" name="verticalLayout">
        <item>
         <widget class="QCheckBox" name="cloudButton">
+         <property name="minimumSize">
+          <size>
+           <width>180</width>
+           <height>0</height>
+          </size>
+         </property>
          <property name="text">
           <string>enable cloud</string>
          </property>
@@ -160,10 +172,16 @@
        <height>171</height>
       </rect>
      </property>
+     <property name="minimumSize">
+      <size>
+       <width>200</width>
+       <height>0</height>
+      </size>
+     </property>
      <property name="title">
       <string>Wave Parameters</string>
      </property>
-     <widget class="QWidget" name="">
+     <widget class="QWidget" name="layoutWidget">
       <property name="geometry">
        <rect>
         <x>10</x>
@@ -260,7 +278,7 @@
      <property name="title">
       <string>Camera</string>
      </property>
-     <widget class="QWidget" name="">
+     <widget class="QWidget" name="layoutWidget">
       <property name="geometry">
        <rect>
         <x>10</x>
@@ -329,33 +347,57 @@
     </widget>
    </widget>
   </widget>
+  <widget class="QMenuBar" name="menuBar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>842</width>
+     <height>22</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menu_File">
+    <property name="title">
+     <string>&amp;File</string>
+    </property>
+    <addaction name="actionOpen"/>
+    <addaction name="actionQuit"/>
+   </widget>
+   <widget class="QMenu" name="menu_Toolbar">
+    <property name="title">
+     <string>&amp;Toolbar</string>
+    </property>
+    <addaction name="actionEffects"/>
+   </widget>
+   <addaction name="menu_File"/>
+   <addaction name="menu_Toolbar"/>
+  </widget>
+  <action name="actionOpen">
+   <property name="text">
+    <string>Open</string>
+   </property>
+   <property name="shortcut">
+    <string>Alt+O</string>
+   </property>
+  </action>
   <action name="actionQuit">
    <property name="text">
     <string>Quit</string>
    </property>
    <property name="shortcut">
-    <string>Ctrl+Q</string>
+    <string>Meta+Q</string>
+   </property>
+  </action>
+  <action name="actionEffects">
+   <property name="text">
+    <string>Effects</string>
+   </property>
+   <property name="shortcut">
+    <string>Meta+1</string>
    </property>
   </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <resources/>
- <connections>
-  <connection>
-   <sender>actionQuit</sender>
-   <signal>triggered()</signal>
-   <receiver>MainWindow</receiver>
-   <slot>close()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>-1</x>
-     <y>-1</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>299</x>
-     <y>199</y>
-    </hint>
-   </hints>
-  </connection>
- </connections>
+ <connections/>
 </ui>

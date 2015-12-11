@@ -7,6 +7,7 @@
 #include <QGridLayout>
 #include <QFileDialog>
 #include <iostream>
+#include <QMessageBox>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -25,13 +26,27 @@ MainWindow::MainWindow(QWidget *parent) :
 
     // resize the window to default size
     resize(1500,750);
+    m_ui->actionOpen->setEnabled(true);
+    m_ui->actionQuit->setEnabled(true);
+    m_ui->actionEffects->setEnabled(true);
+    m_ui->effectDock->setEnabled(true);
+    m_ui->effectDock->raise();
 
     // Bind the UI elements to their properties in the global settings object
-//    QList<QAction*> actions;
+    QList<QAction*> actions;
 
-    m_ui->effectDock->setEnabled(true);
+#define SETUP_ACTION(dock, key)\
+    actions.push_back(m_ui->dock->toggleViewAction()); \
+    actions.back()->setShortcut(QKeySequence(key));
+
+    SETUP_ACTION(effectDock, "CTRL+1");
+
+    m_ui->menuBar->addActions(actions);
+#undef SETUP_ACTION
 
     dataBind();
+
+
 }
 
 MainWindow::~MainWindow()
@@ -95,4 +110,25 @@ void MainWindow::fileOpen()
     if (!file.isNull())
     {
     }
+}
+
+void MainWindow::on_actionOpen_triggered()
+{
+    QString fileName = QFileDialog::getOpenFileName(this, tr("Open File"), QString(),
+               tr("Image Files (*.jpg *png)"));
+
+    if (!fileName.isEmpty()) {
+        QFile file(fileName);
+        if (!file.open(QIODevice::ReadOnly)) {
+            QMessageBox::critical(this, tr("Error"), tr("Could not open file"));
+            return;
+        }
+        // TODO: pass the image into glwidget to change the noise of the waves
+        file.close();
+    }
+}
+
+void MainWindow::on_actionEffects_triggered()
+{
+    m_ui->effectDock->raise();
 }

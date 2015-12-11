@@ -20,6 +20,8 @@
 #include <QtWidgets/QHeaderView>
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QMainWindow>
+#include <QtWidgets/QMenu>
+#include <QtWidgets/QMenuBar>
 #include <QtWidgets/QSlider>
 #include <QtWidgets/QVBoxLayout>
 #include <QtWidgets/QWidget>
@@ -29,13 +31,15 @@ QT_BEGIN_NAMESPACE
 class Ui_MainWindow
 {
 public:
+    QAction *actionOpen;
     QAction *actionQuit;
+    QAction *actionEffects;
     QWidget *centralWidget;
     QWidget *canvas;
     QDockWidget *effectDock;
     QWidget *effectDockContents;
     QGroupBox *effectType;
-    QWidget *widget;
+    QWidget *layoutWidget;
     QVBoxLayout *verticalLayout;
     QCheckBox *cloudButton;
     QHBoxLayout *horizontalLayout;
@@ -50,7 +54,7 @@ public:
     QCheckBox *rainButton;
     QCheckBox *snowButton;
     QGroupBox *waveBox;
-    QWidget *widget1;
+    QWidget *layoutWidget1;
     QVBoxLayout *verticalLayout_3;
     QHBoxLayout *horizontalLayout_9;
     QLabel *bigWaveLabel;
@@ -65,7 +69,7 @@ public:
     QLabel *waveSpeedYLabel;
     QSlider *waveSpeedYSlider;
     QGroupBox *cameraBox;
-    QWidget *widget2;
+    QWidget *layoutWidget2;
     QVBoxLayout *verticalLayout_2;
     QHBoxLayout *horizontalLayout_3;
     QLabel *camXLabel;
@@ -76,14 +80,21 @@ public:
     QHBoxLayout *horizontalLayout_5;
     QLabel *wideAngleLabel;
     QSlider *wideAngleSlider;
+    QMenuBar *menuBar;
+    QMenu *menu_File;
+    QMenu *menu_Toolbar;
 
     void setupUi(QMainWindow *MainWindow)
     {
         if (MainWindow->objectName().isEmpty())
             MainWindow->setObjectName(QStringLiteral("MainWindow"));
         MainWindow->resize(842, 579);
+        actionOpen = new QAction(MainWindow);
+        actionOpen->setObjectName(QStringLiteral("actionOpen"));
         actionQuit = new QAction(MainWindow);
         actionQuit->setObjectName(QStringLiteral("actionQuit"));
+        actionEffects = new QAction(MainWindow);
+        actionEffects->setObjectName(QStringLiteral("actionEffects"));
         centralWidget = new QWidget(MainWindow);
         centralWidget->setObjectName(QStringLiteral("centralWidget"));
         canvas = new QWidget(centralWidget);
@@ -104,31 +115,33 @@ public:
         effectType->setObjectName(QStringLiteral("effectType"));
         effectType->setEnabled(true);
         effectType->setGeometry(QRect(10, 0, 211, 241));
+        effectType->setMinimumSize(QSize(200, 0));
 #ifndef QT_NO_ACCESSIBILITY
         effectType->setAccessibleName(QStringLiteral(""));
 #endif // QT_NO_ACCESSIBILITY
-        widget = new QWidget(effectType);
-        widget->setObjectName(QStringLiteral("widget"));
-        widget->setGeometry(QRect(10, 30, 191, 197));
-        verticalLayout = new QVBoxLayout(widget);
+        layoutWidget = new QWidget(effectType);
+        layoutWidget->setObjectName(QStringLiteral("layoutWidget"));
+        layoutWidget->setGeometry(QRect(10, 30, 191, 197));
+        verticalLayout = new QVBoxLayout(layoutWidget);
         verticalLayout->setSpacing(6);
         verticalLayout->setContentsMargins(11, 11, 11, 11);
         verticalLayout->setObjectName(QStringLiteral("verticalLayout"));
         verticalLayout->setContentsMargins(0, 0, 0, 0);
-        cloudButton = new QCheckBox(widget);
+        cloudButton = new QCheckBox(layoutWidget);
         cloudButton->setObjectName(QStringLiteral("cloudButton"));
+        cloudButton->setMinimumSize(QSize(180, 0));
 
         verticalLayout->addWidget(cloudButton);
 
         horizontalLayout = new QHBoxLayout();
         horizontalLayout->setSpacing(6);
         horizontalLayout->setObjectName(QStringLiteral("horizontalLayout"));
-        thicknessLabel = new QLabel(widget);
+        thicknessLabel = new QLabel(layoutWidget);
         thicknessLabel->setObjectName(QStringLiteral("thicknessLabel"));
 
         horizontalLayout->addWidget(thicknessLabel);
 
-        thicknessSlider = new QSlider(widget);
+        thicknessSlider = new QSlider(layoutWidget);
         thicknessSlider->setObjectName(QStringLiteral("thicknessSlider"));
         thicknessSlider->setOrientation(Qt::Horizontal);
 
@@ -137,7 +150,7 @@ public:
 
         verticalLayout->addLayout(horizontalLayout);
 
-        shadowButton = new QCheckBox(widget);
+        shadowButton = new QCheckBox(layoutWidget);
         shadowButton->setObjectName(QStringLiteral("shadowButton"));
 
         verticalLayout->addWidget(shadowButton);
@@ -145,12 +158,12 @@ public:
         horizontalLayout_2 = new QHBoxLayout();
         horizontalLayout_2->setSpacing(6);
         horizontalLayout_2->setObjectName(QStringLiteral("horizontalLayout_2"));
-        hardnessLabel = new QLabel(widget);
+        hardnessLabel = new QLabel(layoutWidget);
         hardnessLabel->setObjectName(QStringLiteral("hardnessLabel"));
 
         horizontalLayout_2->addWidget(hardnessLabel);
 
-        hardnessSlider = new QSlider(widget);
+        hardnessSlider = new QSlider(layoutWidget);
         hardnessSlider->setObjectName(QStringLiteral("hardnessSlider"));
         hardnessSlider->setOrientation(Qt::Horizontal);
 
@@ -159,22 +172,22 @@ public:
 
         verticalLayout->addLayout(horizontalLayout_2);
 
-        fogButton = new QCheckBox(widget);
+        fogButton = new QCheckBox(layoutWidget);
         fogButton->setObjectName(QStringLiteral("fogButton"));
 
         verticalLayout->addWidget(fogButton);
 
-        lensButton = new QCheckBox(widget);
+        lensButton = new QCheckBox(layoutWidget);
         lensButton->setObjectName(QStringLiteral("lensButton"));
 
         verticalLayout->addWidget(lensButton);
 
-        rainButton = new QCheckBox(widget);
+        rainButton = new QCheckBox(layoutWidget);
         rainButton->setObjectName(QStringLiteral("rainButton"));
 
         verticalLayout->addWidget(rainButton);
 
-        snowButton = new QCheckBox(widget);
+        snowButton = new QCheckBox(layoutWidget);
         snowButton->setObjectName(QStringLiteral("snowButton"));
 
         verticalLayout->addWidget(snowButton);
@@ -182,10 +195,11 @@ public:
         waveBox = new QGroupBox(effectDockContents);
         waveBox->setObjectName(QStringLiteral("waveBox"));
         waveBox->setGeometry(QRect(10, 240, 211, 171));
-        widget1 = new QWidget(waveBox);
-        widget1->setObjectName(QStringLiteral("widget1"));
-        widget1->setGeometry(QRect(10, 30, 191, 128));
-        verticalLayout_3 = new QVBoxLayout(widget1);
+        waveBox->setMinimumSize(QSize(200, 0));
+        layoutWidget1 = new QWidget(waveBox);
+        layoutWidget1->setObjectName(QStringLiteral("layoutWidget1"));
+        layoutWidget1->setGeometry(QRect(10, 30, 191, 128));
+        verticalLayout_3 = new QVBoxLayout(layoutWidget1);
         verticalLayout_3->setSpacing(6);
         verticalLayout_3->setContentsMargins(11, 11, 11, 11);
         verticalLayout_3->setObjectName(QStringLiteral("verticalLayout_3"));
@@ -193,12 +207,12 @@ public:
         horizontalLayout_9 = new QHBoxLayout();
         horizontalLayout_9->setSpacing(6);
         horizontalLayout_9->setObjectName(QStringLiteral("horizontalLayout_9"));
-        bigWaveLabel = new QLabel(widget1);
+        bigWaveLabel = new QLabel(layoutWidget1);
         bigWaveLabel->setObjectName(QStringLiteral("bigWaveLabel"));
 
         horizontalLayout_9->addWidget(bigWaveLabel);
 
-        bigWaveSlider = new QSlider(widget1);
+        bigWaveSlider = new QSlider(layoutWidget1);
         bigWaveSlider->setObjectName(QStringLiteral("bigWaveSlider"));
         bigWaveSlider->setOrientation(Qt::Horizontal);
 
@@ -210,12 +224,12 @@ public:
         horizontalLayout_8 = new QHBoxLayout();
         horizontalLayout_8->setSpacing(6);
         horizontalLayout_8->setObjectName(QStringLiteral("horizontalLayout_8"));
-        smallWaveLabel = new QLabel(widget1);
+        smallWaveLabel = new QLabel(layoutWidget1);
         smallWaveLabel->setObjectName(QStringLiteral("smallWaveLabel"));
 
         horizontalLayout_8->addWidget(smallWaveLabel);
 
-        smallWaveSlider = new QSlider(widget1);
+        smallWaveSlider = new QSlider(layoutWidget1);
         smallWaveSlider->setObjectName(QStringLiteral("smallWaveSlider"));
         smallWaveSlider->setOrientation(Qt::Horizontal);
 
@@ -227,12 +241,12 @@ public:
         horizontalLayout_7 = new QHBoxLayout();
         horizontalLayout_7->setSpacing(6);
         horizontalLayout_7->setObjectName(QStringLiteral("horizontalLayout_7"));
-        waveSpeedXLabel = new QLabel(widget1);
+        waveSpeedXLabel = new QLabel(layoutWidget1);
         waveSpeedXLabel->setObjectName(QStringLiteral("waveSpeedXLabel"));
 
         horizontalLayout_7->addWidget(waveSpeedXLabel);
 
-        waveSpeedXSlider = new QSlider(widget1);
+        waveSpeedXSlider = new QSlider(layoutWidget1);
         waveSpeedXSlider->setObjectName(QStringLiteral("waveSpeedXSlider"));
         waveSpeedXSlider->setOrientation(Qt::Horizontal);
 
@@ -244,12 +258,12 @@ public:
         horizontalLayout_6 = new QHBoxLayout();
         horizontalLayout_6->setSpacing(6);
         horizontalLayout_6->setObjectName(QStringLiteral("horizontalLayout_6"));
-        waveSpeedYLabel = new QLabel(widget1);
+        waveSpeedYLabel = new QLabel(layoutWidget1);
         waveSpeedYLabel->setObjectName(QStringLiteral("waveSpeedYLabel"));
 
         horizontalLayout_6->addWidget(waveSpeedYLabel);
 
-        waveSpeedYSlider = new QSlider(widget1);
+        waveSpeedYSlider = new QSlider(layoutWidget1);
         waveSpeedYSlider->setObjectName(QStringLiteral("waveSpeedYSlider"));
         waveSpeedYSlider->setOrientation(Qt::Horizontal);
 
@@ -261,10 +275,10 @@ public:
         cameraBox = new QGroupBox(effectDockContents);
         cameraBox->setObjectName(QStringLiteral("cameraBox"));
         cameraBox->setGeometry(QRect(10, 410, 211, 131));
-        widget2 = new QWidget(cameraBox);
-        widget2->setObjectName(QStringLiteral("widget2"));
-        widget2->setGeometry(QRect(10, 30, 191, 94));
-        verticalLayout_2 = new QVBoxLayout(widget2);
+        layoutWidget2 = new QWidget(cameraBox);
+        layoutWidget2->setObjectName(QStringLiteral("layoutWidget2"));
+        layoutWidget2->setGeometry(QRect(10, 30, 191, 94));
+        verticalLayout_2 = new QVBoxLayout(layoutWidget2);
         verticalLayout_2->setSpacing(6);
         verticalLayout_2->setContentsMargins(11, 11, 11, 11);
         verticalLayout_2->setObjectName(QStringLiteral("verticalLayout_2"));
@@ -272,12 +286,12 @@ public:
         horizontalLayout_3 = new QHBoxLayout();
         horizontalLayout_3->setSpacing(6);
         horizontalLayout_3->setObjectName(QStringLiteral("horizontalLayout_3"));
-        camXLabel = new QLabel(widget2);
+        camXLabel = new QLabel(layoutWidget2);
         camXLabel->setObjectName(QStringLiteral("camXLabel"));
 
         horizontalLayout_3->addWidget(camXLabel);
 
-        camXSlider = new QSlider(widget2);
+        camXSlider = new QSlider(layoutWidget2);
         camXSlider->setObjectName(QStringLiteral("camXSlider"));
         camXSlider->setOrientation(Qt::Horizontal);
 
@@ -289,12 +303,12 @@ public:
         horizontalLayout_4 = new QHBoxLayout();
         horizontalLayout_4->setSpacing(6);
         horizontalLayout_4->setObjectName(QStringLiteral("horizontalLayout_4"));
-        camYLabel = new QLabel(widget2);
+        camYLabel = new QLabel(layoutWidget2);
         camYLabel->setObjectName(QStringLiteral("camYLabel"));
 
         horizontalLayout_4->addWidget(camYLabel);
 
-        camYSlider = new QSlider(widget2);
+        camYSlider = new QSlider(layoutWidget2);
         camYSlider->setObjectName(QStringLiteral("camYSlider"));
         camYSlider->setOrientation(Qt::Horizontal);
 
@@ -306,12 +320,12 @@ public:
         horizontalLayout_5 = new QHBoxLayout();
         horizontalLayout_5->setSpacing(6);
         horizontalLayout_5->setObjectName(QStringLiteral("horizontalLayout_5"));
-        wideAngleLabel = new QLabel(widget2);
+        wideAngleLabel = new QLabel(layoutWidget2);
         wideAngleLabel->setObjectName(QStringLiteral("wideAngleLabel"));
 
         horizontalLayout_5->addWidget(wideAngleLabel);
 
-        wideAngleSlider = new QSlider(widget2);
+        wideAngleSlider = new QSlider(layoutWidget2);
         wideAngleSlider->setObjectName(QStringLiteral("wideAngleSlider"));
         wideAngleSlider->setOrientation(Qt::Horizontal);
 
@@ -322,9 +336,22 @@ public:
 
         effectDock->setWidget(effectDockContents);
         MainWindow->addDockWidget(static_cast<Qt::DockWidgetArea>(1), effectDock);
+        menuBar = new QMenuBar(MainWindow);
+        menuBar->setObjectName(QStringLiteral("menuBar"));
+        menuBar->setGeometry(QRect(0, 0, 842, 22));
+        menu_File = new QMenu(menuBar);
+        menu_File->setObjectName(QStringLiteral("menu_File"));
+        menu_Toolbar = new QMenu(menuBar);
+        menu_Toolbar->setObjectName(QStringLiteral("menu_Toolbar"));
+        MainWindow->setMenuBar(menuBar);
+
+        menuBar->addAction(menu_File->menuAction());
+        menuBar->addAction(menu_Toolbar->menuAction());
+        menu_File->addAction(actionOpen);
+        menu_File->addAction(actionQuit);
+        menu_Toolbar->addAction(actionEffects);
 
         retranslateUi(MainWindow);
-        QObject::connect(actionQuit, SIGNAL(triggered()), MainWindow, SLOT(close()));
 
         QMetaObject::connectSlotsByName(MainWindow);
     } // setupUi
@@ -332,8 +359,12 @@ public:
     void retranslateUi(QMainWindow *MainWindow)
     {
         MainWindow->setWindowTitle(QApplication::translate("MainWindow", "FinalProject", 0));
+        actionOpen->setText(QApplication::translate("MainWindow", "Open", 0));
+        actionOpen->setShortcut(QApplication::translate("MainWindow", "Alt+O", 0));
         actionQuit->setText(QApplication::translate("MainWindow", "Quit", 0));
-        actionQuit->setShortcut(QApplication::translate("MainWindow", "Ctrl+Q", 0));
+        actionQuit->setShortcut(QApplication::translate("MainWindow", "Meta+Q", 0));
+        actionEffects->setText(QApplication::translate("MainWindow", "Effects", 0));
+        actionEffects->setShortcut(QApplication::translate("MainWindow", "Meta+1", 0));
         effectType->setTitle(QApplication::translate("MainWindow", "Effect Types", 0));
         cloudButton->setText(QApplication::translate("MainWindow", "enable cloud", 0));
         thicknessLabel->setText(QApplication::translate("MainWindow", "Thickness", 0));
@@ -352,6 +383,8 @@ public:
         camXLabel->setText(QApplication::translate("MainWindow", "X Position", 0));
         camYLabel->setText(QApplication::translate("MainWindow", "Y Position", 0));
         wideAngleLabel->setText(QApplication::translate("MainWindow", "Wide Angle", 0));
+        menu_File->setTitle(QApplication::translate("MainWindow", "&File", 0));
+        menu_Toolbar->setTitle(QApplication::translate("MainWindow", "&Toolbar", 0));
     } // retranslateUi
 
 };
