@@ -13,14 +13,21 @@
 struct Settings
 {
     // Loads settings from disk, or fills in default values if no saved settings exist.
-    void loadSettingsOrDefaults();
+    void loadDefaults();
 
-    // Saves the current settings to disk.
-    void saveSettings();
+    /** Shader parameters **/
 
-    bool enableCloud;
-    bool enableFog;
-    float cloudThickness;
+    //Effect controller --> UI : Effect
+    bool enableCloud, enableFog, enableLens, enableSnow, enableRain, enableShadow;
+
+    //Water effect --> UI : Water
+    float bigWave, smallWave, waveSpeedX, waveSpeedY;
+
+    //Cloud effect --> UI : Cloud
+    float cloudThickness, shadowHardness;
+
+    //Camera adjust --> UI : Camera
+    float camX, camY, wideAngle;
 };
 
 // The global Settings object, will be initialized by MainWindow

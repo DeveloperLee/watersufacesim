@@ -69,23 +69,8 @@ private:
 
     OpenGLShape* m_shape;
 
-    /** Shader parameters **/
-
     //Screen resolution
     glm::vec2 m_screenDimension;
-
-    //Effect controller --> UI : Effect
-    bool m_renderFog, m_renderCloud, m_renderLens, m_renderSnow, m_renderRain;
-
-    //Water effect --> UI : Water
-    float m_bigwave, m_smallwave;
-    glm::vec2 m_waveSpeed;
-
-    //Cloud effect --> UI : Cloud
-    float m_cloudThickness, m_shadowhardness;
-
-    //Camera adjust --> UI : Camera
-    float m_camX, m_camY, m_wideAngle;
 };
 
 #endif // GLWIDGET_H

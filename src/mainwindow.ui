@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>842</width>
-    <height>474</height>
+    <height>579</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -32,6 +32,12 @@
      <verstretch>0</verstretch>
     </sizepolicy>
    </property>
+   <property name="baseSize">
+    <size>
+     <width>200</width>
+     <height>500</height>
+    </size>
+   </property>
    <attribute name="dockWidgetArea">
     <number>1</number>
    </attribute>
@@ -43,37 +49,24 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>10</y>
-       <width>300</width>
-       <height>111</height>
+       <y>0</y>
+       <width>211</width>
+       <height>241</height>
       </rect>
      </property>
      <property name="accessibleName">
       <string notr="true"/>
      </property>
      <property name="title">
-      <string>Effect Type</string>
+      <string>Effect Types</string>
      </property>
-     <widget class="QCheckBox" name="fogButton">
-      <property name="geometry">
-       <rect>
-        <x>10</x>
-        <y>81</y>
-        <width>89</width>
-        <height>20</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>enable fog</string>
-      </property>
-     </widget>
-     <widget class="QWidget" name="layoutWidget">
+     <widget class="QWidget" name="">
       <property name="geometry">
        <rect>
         <x>10</x>
         <y>30</y>
         <width>191</width>
-        <height>51</height>
+        <height>197</height>
        </rect>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout">
@@ -95,6 +88,235 @@
          </item>
          <item>
           <widget class="QSlider" name="thicknessSlider">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="shadowButton">
+         <property name="text">
+          <string>enable shadow</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_2">
+         <item>
+          <widget class="QLabel" name="hardnessLabel">
+           <property name="text">
+            <string>Hardness</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QSlider" name="hardnessSlider">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="fogButton">
+         <property name="text">
+          <string>enable fog</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="lensButton">
+         <property name="text">
+          <string>enable lens</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="rainButton">
+         <property name="text">
+          <string>enable rain</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="snowButton">
+         <property name="text">
+          <string>enable snow</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+    <widget class="QGroupBox" name="waveBox">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>240</y>
+       <width>211</width>
+       <height>171</height>
+      </rect>
+     </property>
+     <property name="title">
+      <string>Wave Parameters</string>
+     </property>
+     <widget class="QWidget" name="">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>30</y>
+        <width>191</width>
+        <height>128</height>
+       </rect>
+      </property>
+      <layout class="QVBoxLayout" name="verticalLayout_3">
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_9">
+         <item>
+          <widget class="QLabel" name="bigWaveLabel">
+           <property name="text">
+            <string>Big Wave</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QSlider" name="bigWaveSlider">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_8">
+         <item>
+          <widget class="QLabel" name="smallWaveLabel">
+           <property name="text">
+            <string>Small Wave</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QSlider" name="smallWaveSlider">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_7">
+         <item>
+          <widget class="QLabel" name="waveSpeedXLabel">
+           <property name="text">
+            <string>Wave Speed X</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QSlider" name="waveSpeedXSlider">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_6">
+         <item>
+          <widget class="QLabel" name="waveSpeedYLabel">
+           <property name="text">
+            <string>Wave Speed Y</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QSlider" name="waveSpeedYSlider">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+    <widget class="QGroupBox" name="cameraBox">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>410</y>
+       <width>211</width>
+       <height>131</height>
+      </rect>
+     </property>
+     <property name="title">
+      <string>Camera</string>
+     </property>
+     <widget class="QWidget" name="">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>30</y>
+        <width>191</width>
+        <height>94</height>
+       </rect>
+      </property>
+      <layout class="QVBoxLayout" name="verticalLayout_2">
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_3">
+         <item>
+          <widget class="QLabel" name="camXLabel">
+           <property name="text">
+            <string>X Position</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QSlider" name="camXSlider">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_4">
+         <item>
+          <widget class="QLabel" name="camYLabel">
+           <property name="text">
+            <string>Y Position</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QSlider" name="camYSlider">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_5">
+         <item>
+          <widget class="QLabel" name="wideAngleLabel">
+           <property name="text">
+            <string>Wide Angle</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QSlider" name="wideAngleSlider">
            <property name="orientation">
             <enum>Qt::Horizontal</enum>
            </property>
