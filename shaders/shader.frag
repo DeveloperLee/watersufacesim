@@ -530,34 +530,34 @@ vec3 renderWeather(Camera cam, vec3 rd, float dist,vec3 light)
 
         //rainOctaves represents how many layers are taken into account when reder rain drop
         for(int i = 0;i < rainOctaves; ++i){
-           vec3 curpos = cam.pos + t * rd;
+            vec3 curpos = cam.pos + t * rd;
 
-           if(curpos.z < p.z){
+            if(curpos.z < p.z){
 
-             float chain,thickness = .0;
+                float chain,thickness = .0;
 
-             if(renderRain){
-               thickness = .1;
-               chain = 31.5;
-             }else{
-               thickness = .9;
-               chain = 23.5;
-             }
-             float seq = pow(t, 1.1);
+                if(renderRain){
+                    thickness = .1;
+                    chain = 31.5;
+                }else{
+                    thickness = .9;
+                    chain = 23.5;
+                }
+                float seq = pow(t, 1.1);
 
-               //The direction of rain fall x-->Left or right / y-->back or toward
-               vec2 st = seq * (newViewport.xy * vec2(resolution.x / resolution.y , thickness) + vec2(-currentTime * .1 + newViewport.y * .3, currentTime * .5));
-               seq = abs((texture(noise_texture, st * .5, -100.).x + texture(noise_texture, st * .284, 100.).y));
-               seq = clamp(pow(seq * .5, chain) * 140. , 0., .5);
-               //Basic brightness of the rain drop
-               vec3 brightness = vec3(.25);
-               float dot = clamp(dot(rd,light),.4,1.) * .2;
-               brightness += dot;
-               raincol += brightness * seq;
-           }
+                //The direction of rain fall x-->Left or right / y-->back or toward
+                vec2 st = seq * (newViewport.xy * vec2(resolution.x / resolution.y , thickness) + vec2(-currentTime * .1 + newViewport.y * .3, currentTime * .5));
+                seq = abs((texture(noise_texture, st * .5, -100.).x + texture(noise_texture, st * .284, 100.).y));
+                seq = clamp(pow(seq * .5, chain) * 140. , 0., .5);
+                //Basic brightness of the rain drop
+                vec3 brightness = vec3(.25);
+                float dot = clamp(dot(rd,light),.4,1.) * .2;
+                brightness += dot;
+                raincol += brightness * seq;
+            }
 
-           //March distance for the current ray
-           t += 3.;
+            //March distance for the current ray
+            t += 3.;
         }
 
         raincol = clamp(raincol, 0., 1.);

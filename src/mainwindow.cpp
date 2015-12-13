@@ -104,13 +104,13 @@ void MainWindow::settingsChanged()
     m_glWidget->update();
 }
 
-void MainWindow::fileOpen()
-{
-    QString file = QFileDialog::getOpenFileName(this, QString(), "./sources/");
-    if (!file.isNull())
-    {
-    }
-}
+//void MainWindow::fileOpen()
+//{
+//    QString file = QFileDialog::getOpenFileName(this, QString(), "./sources/");
+//    if (!file.isNull())
+//    {
+//    }
+//}
 
 void MainWindow::on_actionOpen_triggered()
 {
@@ -118,17 +118,11 @@ void MainWindow::on_actionOpen_triggered()
                tr("Image Files (*.jpg *png)"));
 
     if (!fileName.isEmpty()) {
-        QFile file(fileName);
-        if (!file.open(QIODevice::ReadOnly)) {
-            QMessageBox::critical(this, tr("Error"), tr("Could not open file"));
-            return;
-        }
-        // TODO: pass the image into glwidget to change the noise of the waves
-        file.close();
+        m_glWidget->reloadTexture(fileName);
     }
 }
 
 void MainWindow::on_actionEffects_triggered()
 {
-    m_ui->effectDock->raise();
+    m_ui->effectDock->show();
 }

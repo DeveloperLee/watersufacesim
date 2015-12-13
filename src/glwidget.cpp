@@ -98,6 +98,12 @@ void GLWidget::resizeGL(int w, int h)
     rebuildMatrices();
 }
 
+void GLWidget::reloadTexture(QString filename)
+{
+    QImage texture(filename);
+    m_shape->bindTexture(texture);
+}
+
 void GLWidget::mousePressEvent(QMouseEvent *event)
 {
     m_prevMousePos = event->pos();

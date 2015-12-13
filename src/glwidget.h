@@ -25,6 +25,7 @@ class GLWidget : public QGLWidget
 public:
     GLWidget(QGLFormat format, QWidget *parent = 0);
     ~GLWidget();
+    void reloadTexture(QString filename);
 
 protected:
     void initializeGL();

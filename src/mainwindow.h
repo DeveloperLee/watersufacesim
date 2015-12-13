@@ -34,7 +34,7 @@ private:
 
 public slots:
     void settingsChanged();
-    void fileOpen();
+//    void fileOpen();
 private slots:
     void on_actionOpen_triggered();
     void on_actionEffects_triggered();
