@@ -1,6 +1,5 @@
 #version 400 core
 
-
 //---------------------Uniforms--------------------------//
 
 uniform ivec2 resolution;      // Screen resolution
@@ -48,7 +47,7 @@ vec3 reflskycolor = vec3(0.025, 0.10, 0.20);
 //---------------------Movements------------------------//
 
 float sunshift = sin(currentTime * .05);
-vec2 cloudshift = vec2(currentTime) * vec2(80.,50.);
+vec2 cloudshift = vec2(currentTime) * vec2(70.,50.);
 vec3 light = normalize( vec3(0.5, clamp(sunshift,-1.,.3),  0.5) );
 mat2 fbm2Dmat2 = mat2(.4,-.3,.4,.3);
 mat3 m = mat3( 0.00,  1.60,  1.20, -1.60,  0.72, -0.96, -1.20, -0.96,  1.28 );
@@ -502,15 +501,15 @@ vec3 renderWater(vec3 pos, float dist, vec3 rd)
     //Shadow created by moving cloud
     float shadow = shadow(pos, rd);
 
-    float csky   = skyreflection * shadow;
-    float wwater = (1.0 - skyreflection) * shadow;
+
     float diffuse = clamp(dot(rd,light),0.,1.);
 
-    water = csky * reflskycolor + wwater * watercolor;
+    //Mix the water with the sky color then apply shadow
+    water = mix(reflskycolor, watercolor, skyreflection) * shadow;
     water += vec3(.003, .005, .005) * (pos.y+30.);
 
     // Sun
-    float wsunrefl = csky * (0.5*pow( diffuse, 10.0 )+0.25*pow( diffuse, 3.5)+.75*pow( diffuse, 300.0));
+    float wsunrefl = skyreflection * shadow * (0.5*pow( diffuse, 10.0 )+0.25*pow( diffuse, 3.5)+.75*pow( diffuse, 300.0));
     water += vec3(1.5,1.3,1.0) * wsunrefl; // sun reflection
 
     return water;
@@ -624,8 +623,6 @@ void main()
   //First line -> global constant fog
   //Second line -> lighting fog
   //Third line -> Height-based fog (***BUG***)
-
-
 
   if(renderFog){
 //      col = distFog(col, dist);

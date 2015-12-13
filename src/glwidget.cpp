@@ -14,8 +14,8 @@ GLWidget::GLWidget(QGLFormat format, QWidget *parent)
       m_timer(this),m_fps(40.0f),
       m_renderFog(true), m_renderCloud(true), m_renderLens(true), m_renderSnow(true),
       m_bigwave(3.0), m_smallwave(0.9), m_waveSpeed(glm::vec2(0.17,-0.12)),
-      m_cloudThickness(4.f), m_shadowhardness(0.95),
-      m_camX(200.0), m_camY(100.0),m_wideAngle(0.9)
+      m_cloudThickness(20.f), m_shadowhardness(1.0),
+      m_camX(200.0), m_camY(100.0),m_wideAngle(1.2)
 {
     connect(&m_timer, SIGNAL(timeout()), this, SLOT(tick()));
     m_timer.start(1000.0f / m_fps);
@@ -45,7 +45,7 @@ void GLWidget::initializeGL()
     m_shape->setVertexData(m_quadVertices,sizeof(m_quadVertices),GL_TRIANGLE_STRIP,4);
     m_shape->setAttribute(0,2,GL_FLOAT,GL_FALSE,0,0);
 
-    QImage img("/Users/EricLee/Downloads/cs123final/resources/noise.png","PNG");
+    QImage img(":/resources/noise.png","PNG");
 
     m_shape->bindTexture(img);
 

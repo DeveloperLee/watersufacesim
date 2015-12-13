@@ -1,0 +1,10 @@
+<RCC>
+    <qresource prefix="/">
+        <file>icon.png</file>
+        <file>noise.png</file>
+        <file>resources.qrc</file>
+        <file>terrain_texture.jpg</file>
+        <file>tex09.jpg</file>
+        <file>tex11.png</file>
+    </qresource>
+</RCC>
