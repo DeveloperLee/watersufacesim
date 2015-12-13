@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>842</width>
-    <height>579</height>
+    <height>714</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -25,65 +25,65 @@
     </property>
    </widget>
   </widget>
-  <widget class="QDockWidget" name="effectDock">
-   <property name="sizePolicy">
-    <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-     <horstretch>0</horstretch>
-     <verstretch>0</verstretch>
-    </sizepolicy>
+  <widget class="QMenuBar" name="menuBar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>842</width>
+     <height>22</height>
+    </rect>
    </property>
-   <property name="baseSize">
-    <size>
-     <width>200</width>
-     <height>500</height>
-    </size>
-   </property>
+   <widget class="QMenu" name="menu_File">
+    <property name="title">
+     <string>&amp;File</string>
+    </property>
+    <addaction name="actionOpen"/>
+    <addaction name="actionQuit"/>
+   </widget>
+   <widget class="QMenu" name="menu_Toolbar">
+    <property name="title">
+     <string>&amp;Toolbar</string>
+    </property>
+    <addaction name="actionEffects"/>
+   </widget>
+   <addaction name="menu_File"/>
+   <addaction name="menu_Toolbar"/>
+  </widget>
+  <widget class="QDockWidget" name="effectsDock">
    <attribute name="dockWidgetArea">
     <number>1</number>
    </attribute>
-   <widget class="QWidget" name="effectDockContents">
-    <widget class="QGroupBox" name="effectType">
-     <property name="enabled">
-      <bool>true</bool>
-     </property>
+   <widget class="QWidget" name="dockWidgetContents_2">
+    <widget class="QSplitter" name="splitter">
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>0</y>
-       <width>211</width>
-       <height>241</height>
+       <y>10</y>
+       <width>181</width>
+       <height>456</height>
       </rect>
      </property>
-     <property name="minimumSize">
-      <size>
-       <width>200</width>
-       <height>0</height>
-      </size>
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
      </property>
-     <property name="accessibleName">
-      <string notr="true"/>
-     </property>
-     <property name="title">
-      <string>Effect Types</string>
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
      </property>
      <widget class="QWidget" name="layoutWidget">
-      <property name="geometry">
-       <rect>
-        <x>10</x>
-        <y>30</y>
-        <width>191</width>
-        <height>197</height>
-       </rect>
-      </property>
-      <layout class="QVBoxLayout" name="verticalLayout">
+      <layout class="QVBoxLayout" name="verticalLayout_3">
+       <item>
+        <widget class="QLabel" name="label_10">
+         <property name="text">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:14pt; font-weight:600;&quot;&gt;Effects&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+        </widget>
+       </item>
        <item>
         <widget class="QCheckBox" name="cloudButton">
-         <property name="minimumSize">
-          <size>
-           <width>180</width>
-           <height>0</height>
-          </size>
-         </property>
          <property name="text">
           <string>enable cloud</string>
          </property>
@@ -92,7 +92,7 @@
        <item>
         <layout class="QHBoxLayout" name="horizontalLayout">
          <item>
-          <widget class="QLabel" name="thicknessLabel">
+          <widget class="QLabel" name="label">
            <property name="text">
             <string>Thickness</string>
            </property>
@@ -110,14 +110,14 @@
        <item>
         <widget class="QCheckBox" name="shadowButton">
          <property name="text">
-          <string>enable shadow</string>
+          <string>enable shadows</string>
          </property>
         </widget>
        </item>
        <item>
         <layout class="QHBoxLayout" name="horizontalLayout_2">
          <item>
-          <widget class="QLabel" name="hardnessLabel">
+          <widget class="QLabel" name="label_2">
            <property name="text">
             <string>Hardness</string>
            </property>
@@ -162,39 +162,28 @@
        </item>
       </layout>
      </widget>
-    </widget>
-    <widget class="QGroupBox" name="waveBox">
-     <property name="geometry">
-      <rect>
-       <x>10</x>
-       <y>240</y>
-       <width>211</width>
-       <height>171</height>
-      </rect>
-     </property>
-     <property name="minimumSize">
-      <size>
-       <width>200</width>
-       <height>0</height>
-      </size>
-     </property>
-     <property name="title">
-      <string>Wave Parameters</string>
-     </property>
      <widget class="QWidget" name="layoutWidget">
-      <property name="geometry">
-       <rect>
-        <x>10</x>
-        <y>30</y>
-        <width>191</width>
-        <height>128</height>
-       </rect>
-      </property>
-      <layout class="QVBoxLayout" name="verticalLayout_3">
+      <layout class="QVBoxLayout" name="verticalLayout">
+       <property name="spacing">
+        <number>0</number>
+       </property>
+       <property name="topMargin">
+        <number>2</number>
+       </property>
+       <property name="bottomMargin">
+        <number>2</number>
+       </property>
        <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_9">
+        <widget class="QLabel" name="label_11">
+         <property name="text">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:14pt; font-weight:600;&quot;&gt;Water&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_3">
          <item>
-          <widget class="QLabel" name="bigWaveLabel">
+          <widget class="QLabel" name="label_3">
            <property name="text">
             <string>Big Wave</string>
            </property>
@@ -210,9 +199,9 @@
         </layout>
        </item>
        <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_8">
+        <layout class="QHBoxLayout" name="horizontalLayout_4">
          <item>
-          <widget class="QLabel" name="smallWaveLabel">
+          <widget class="QLabel" name="label_4">
            <property name="text">
             <string>Small Wave</string>
            </property>
@@ -228,9 +217,9 @@
         </layout>
        </item>
        <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_7">
+        <layout class="QHBoxLayout" name="horizontalLayout_5">
          <item>
-          <widget class="QLabel" name="waveSpeedXLabel">
+          <widget class="QLabel" name="label_5">
            <property name="text">
             <string>Wave Speed X</string>
            </property>
@@ -248,7 +237,7 @@
        <item>
         <layout class="QHBoxLayout" name="horizontalLayout_6">
          <item>
-          <widget class="QLabel" name="waveSpeedYLabel">
+          <widget class="QLabel" name="label_6">
            <property name="text">
             <string>Wave Speed Y</string>
            </property>
@@ -265,35 +254,21 @@
        </item>
       </layout>
      </widget>
-    </widget>
-    <widget class="QGroupBox" name="cameraBox">
-     <property name="geometry">
-      <rect>
-       <x>10</x>
-       <y>410</y>
-       <width>211</width>
-       <height>131</height>
-      </rect>
-     </property>
-     <property name="title">
-      <string>Camera</string>
-     </property>
      <widget class="QWidget" name="layoutWidget">
-      <property name="geometry">
-       <rect>
-        <x>10</x>
-        <y>30</y>
-        <width>191</width>
-        <height>94</height>
-       </rect>
-      </property>
       <layout class="QVBoxLayout" name="verticalLayout_2">
        <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_3">
+        <widget class="QLabel" name="label_12">
+         <property name="text">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:14pt; font-weight:600;&quot;&gt;Camera&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_7">
          <item>
-          <widget class="QLabel" name="camXLabel">
+          <widget class="QLabel" name="label_7">
            <property name="text">
-            <string>X Position</string>
+            <string>Position X</string>
            </property>
           </widget>
          </item>
@@ -307,11 +282,11 @@
         </layout>
        </item>
        <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_4">
+        <layout class="QHBoxLayout" name="horizontalLayout_8">
          <item>
-          <widget class="QLabel" name="camYLabel">
+          <widget class="QLabel" name="label_8">
            <property name="text">
-            <string>Y Position</string>
+            <string>Position Y</string>
            </property>
           </widget>
          </item>
@@ -325,9 +300,9 @@
         </layout>
        </item>
        <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_5">
+        <layout class="QHBoxLayout" name="horizontalLayout_9">
          <item>
-          <widget class="QLabel" name="wideAngleLabel">
+          <widget class="QLabel" name="label_9">
            <property name="text">
             <string>Wide Angle</string>
            </property>
@@ -347,37 +322,12 @@
     </widget>
    </widget>
   </widget>
-  <widget class="QMenuBar" name="menuBar">
-   <property name="geometry">
-    <rect>
-     <x>0</x>
-     <y>0</y>
-     <width>842</width>
-     <height>22</height>
-    </rect>
-   </property>
-   <widget class="QMenu" name="menu_File">
-    <property name="title">
-     <string>&amp;File</string>
-    </property>
-    <addaction name="actionOpen"/>
-    <addaction name="actionQuit"/>
-   </widget>
-   <widget class="QMenu" name="menu_Toolbar">
-    <property name="title">
-     <string>&amp;Toolbar</string>
-    </property>
-    <addaction name="actionEffects"/>
-   </widget>
-   <addaction name="menu_File"/>
-   <addaction name="menu_Toolbar"/>
-  </widget>
   <action name="actionOpen">
    <property name="text">
     <string>Open</string>
    </property>
    <property name="shortcut">
-    <string>Alt+O</string>
+    <string>Meta+O</string>
    </property>
   </action>
   <action name="actionQuit">
@@ -394,6 +344,22 @@
    </property>
    <property name="shortcut">
     <string>Meta+1</string>
+   </property>
+  </action>
+  <action name="actionWater_Parameters">
+   <property name="text">
+    <string>Water Parameters</string>
+   </property>
+   <property name="shortcut">
+    <string>Meta+2</string>
+   </property>
+  </action>
+  <action name="actionCamera">
+   <property name="text">
+    <string>Camera</string>
+   </property>
+   <property name="shortcut">
+    <string>Meta+3</string>
    </property>
   </action>
  </widget>

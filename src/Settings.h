@@ -12,7 +12,7 @@
 
 struct Settings
 {
-    // Loads settings from disk, or fills in default values if no saved settings exist.
+    // fill in default values
     void loadDefaults();
 
     /** Shader parameters **/

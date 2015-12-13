@@ -24,13 +24,17 @@ MainWindow::MainWindow(QWidget *parent) :
     m_glWidget = new GLWidget(qglFormat, this);
     gridLayout->addWidget(m_glWidget, 0, 1);
 
+    // restore the UI settings
+    QSettings qtSettings("SkyView");
+    restoreGeometry(qtSettings.value("geometry").toByteArray());
+    restoreState(qtSettings.value("windowState").toByteArray());
+
     // resize the window to default size
-    resize(1500,750);
+    resize(750,370);
     m_ui->actionOpen->setEnabled(true);
     m_ui->actionQuit->setEnabled(true);
     m_ui->actionEffects->setEnabled(true);
-    m_ui->effectDock->setEnabled(true);
-    m_ui->effectDock->raise();
+    m_ui->effectsDock->setEnabled(true);
 
     // Bind the UI elements to their properties in the global settings object
     QList<QAction*> actions;
@@ -39,14 +43,14 @@ MainWindow::MainWindow(QWidget *parent) :
     actions.push_back(m_ui->dock->toggleViewAction()); \
     actions.back()->setShortcut(QKeySequence(key));
 
-    SETUP_ACTION(effectDock, "CTRL+1");
+    SETUP_ACTION(effectsDock, "CTRL+1");
 
     m_ui->menuBar->addActions(actions);
 #undef SETUP_ACTION
 
+    addDockWidget(Qt::LeftDockWidgetArea, m_ui->effectsDock);
+
     dataBind();
-
-
 }
 
 MainWindow::~MainWindow()
@@ -96,6 +100,9 @@ void MainWindow::changeEvent(QEvent *e)
 
 void MainWindow::closeEvent(QCloseEvent *event)
 {
+    QSettings qtSettings("SkyView");
+    qtSettings.setValue("geometry", saveGeometry());
+    qtSettings.setValue("windowState", saveState());
     QMainWindow::closeEvent(event);
 }
 
@@ -103,14 +110,6 @@ void MainWindow::settingsChanged()
 {
     m_glWidget->update();
 }
-
-//void MainWindow::fileOpen()
-//{
-//    QString file = QFileDialog::getOpenFileName(this, QString(), "./sources/");
-//    if (!file.isNull())
-//    {
-//    }
-//}
 
 void MainWindow::on_actionOpen_triggered()
 {
@@ -124,5 +123,5 @@ void MainWindow::on_actionOpen_triggered()
 
 void MainWindow::on_actionEffects_triggered()
 {
-    m_ui->effectDock->show();
+    m_ui->effectsDock->show();
 }
