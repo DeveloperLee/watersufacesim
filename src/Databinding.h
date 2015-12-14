@@ -35,37 +35,6 @@ signals:
 };
 
 /**
- * @class IntBinding
- *
- * This class binds a slider and a textbox to an int, so when either the slider or the textbox
- * is changed, the other is also changed and the int is updated with the new value.  This does
- * not update either the slider or the textbox when the int is set to a new value.
- */
-class IntBinding : public DataBinding
-{
-    Q_OBJECT
-public:
-    virtual ~IntBinding() {}
-
-    static IntBinding* bindSliderAndTextbox(
-        QSlider *slider, QLineEdit *textbox, int &value, int minValue, int maxValue);
-    static IntBinding* bindTextbox(QLineEdit *textbox, int &value);
-
-private slots:
-    void intChanged(int newValue);
-    void stringChanged(QString newValue);
-
-signals:
-    void updateInt(int newValue);
-    void updateString(QString newValue);
-
-private:
-    IntBinding(int &value) : DataBinding(), m_value(value) {}
-
-    int &m_value;
-};
-
-/**
  *
  * @class FloatBinding
  *
@@ -81,18 +50,12 @@ public:
 
     static FloatBinding* bindSlider(
          QSlider *slider, float &value, float minValue, float maxValue);
-    static FloatBinding* bindSliderAndTextbox(
-         QSlider *slider, QLineEdit *textbox, float &value, float minValue, float maxValue);
-    static FloatBinding* bindDial(
-         QDial *dial, float &value, float minValue, float maxValue, bool wrappingExtendsRange);
 
 private slots:
     void intChanged(int newValue);
-    void stringChanged(QString newValue);
 
 signals:
     void updateInt(int newValue);
-    void updateString(QString newValue);
 
 private:
     FloatBinding(float &value) :
@@ -120,7 +83,7 @@ public:
     virtual ~BoolBinding() {}
 
     static BoolBinding* bindCheckbox(QCheckBox *checkbox, bool &value);
-    static BoolBinding* bindDock(QDockWidget *dock, bool &value);
+//    static BoolBinding* bindDock(QDockWidget *dock, bool &value);
 
 private slots:
     void boolChanged(bool newValue);
@@ -129,32 +92,6 @@ private:
     BoolBinding(bool &value) : DataBinding(), m_value(value) {}
 
     bool &m_value;
-};
-
-/**
- * @class ChoiceBinding
- *
- * This class binds a group of radio buttons to an int, so when a radio button is clicked the
- * int is updated with the index of the currently checked button in the group.  This does not
- * update the radio buttons when the int is set to a new value.
- */
-class ChoiceBinding : public DataBinding
-{
-    Q_OBJECT
-public:
-    virtual ~ChoiceBinding() {}
-
-    static ChoiceBinding* bindRadioButtons(
-            QButtonGroup *buttonGroup, int numRadioButtons, int &value, ...);
-    static ChoiceBinding* bindTabs(QTabWidget *tabs, int &value);
-
-private slots:
-    void intChanged(int newValue);
-
-private:
-    ChoiceBinding(int &value) : DataBinding(), m_value(value) {}
-
-    int &m_value;
 };
 
 #endif // DATABINDING_H

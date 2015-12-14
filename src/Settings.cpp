@@ -1,25 +1,24 @@
 #include "Settings.h"
 #include <QFile>
-#include <QSettings>
+//#include <QSettings>
 
 Settings settings;
 
-void Settings::loadSettingsOrDefaults()
+void Settings::loadDefaults()
 {
-    // Set the default values below
-    QSettings s;
-
-    enableCloud = s.value("enableCloud", false).toBool();
-    cloudThickness = s.value("cloudThickness", 1.f).toFloat();
-    enableFog = s.value("enableFog", false).toBool();
-}
-
-void Settings::saveSettings()
-{
-    QSettings s;
-
-    s.setValue("enableCloud", enableCloud);
-    s.setValue("cloudThickness", cloudThickness);
-    s.setValue("enableFog", enableFog);
+    enableFog = false;
+    enableCloud = false;
+    enableRain = false;
+    enableSnow = false;
+    enableLens = false;
+    bigWave = 3.0;
+    smallWave = 0.9;
+    waveSpeedX = 0.17;
+    waveSpeedY = -0.12;
+    cloudThickness = 4.f;
+    shadowHardness = 0.95;
+    camX = 200.0;
+    camY = 100.0;
+    wideAngle = 0.9;
 }
 
