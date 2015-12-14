@@ -15,7 +15,6 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     settings.loadDefaults();
 
-//    this->setMinimumSize(100, 100);
     QGLFormat qglFormat;
     qglFormat.setVersion(4,0);
     qglFormat.setProfile(QGLFormat::CoreProfile);

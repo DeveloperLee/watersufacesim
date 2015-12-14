@@ -74,6 +74,7 @@ void GLWidget::paintGL()
     glUniform1f(glGetUniformLocation(m_program, "camY"), settings.camY);
     glUniform1f(glGetUniformLocation(m_program, "wideAngle"), settings.wideAngle);
     glUniform1i(glGetUniformLocation(m_program, "renderFog"), settings.enableFog);
+    glUniform1i(glGetUniformLocation(m_program, "renderShadow"), settings.enableShadow);
     glUniform1i(glGetUniformLocation(m_program, "renderCloud"), settings.enableCloud);
     glUniform1i(glGetUniformLocation(m_program, "renderLens"), settings.enableLens);
     glUniform1i(glGetUniformLocation(m_program, "renderSnow"), settings.enableSnow);
@@ -115,12 +116,6 @@ void GLWidget::mouseMoveEvent(QMouseEvent *event)
     m_prevMousePos = event->pos();
     rebuildMatrices();
 }
-
-//void GLWidget::wheelEvent(QWheelEvent *event)
-//{
-//    m_zoom -= event->delta() / 100.f;
-//    rebuildMatrices();
-//}
 
 void GLWidget::rebuildMatrices()
 {

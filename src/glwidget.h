@@ -33,7 +33,6 @@ protected:
     void resizeGL(int w, int h);
     void mousePressEvent(QMouseEvent *e);
     void mouseMoveEvent(QMouseEvent *e);
-//    void wheelEvent(QWheelEvent *e);
 
 protected slots:
 

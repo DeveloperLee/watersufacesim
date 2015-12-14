@@ -14,6 +14,7 @@ uniform float bigwave;
 uniform float smallwave;
 uniform vec2 wavespeed;
 uniform bool renderFog;        // True: render fog, False: doesn't render
+uniform bool renderShadow;
 uniform bool renderCloud;      // True: render cloud, False: doesn't render
 uniform bool renderLens;
 uniform bool renderSnow;
@@ -168,12 +169,7 @@ float waterH(vec2 p)
 
 float map(vec3 p)
 {
-//    float diff1 = p.y - terrainH(p.xz);
-//    float diff2 = p.y - waterH(p.xz);
-//    diff = diff2 - diff1;
-//    return min(diff1,diff2);
     return p.y - waterH(p.xz);
-//      return p.y - terrainH(p.xz);
 }
 
 //Soft shadow function for mapping the cloud shadow onto the water surface
@@ -200,7 +196,7 @@ float shadow(vec3 ro, vec3 rd)
         t += 100.;
     }
 
-    if(renderCloud) return clamp(1 - shadow, 0., 1.);
+    if(renderCloud && renderShadow) return clamp(1 - shadow, 0., 1.);
     else return 1.;
 }
 
@@ -577,7 +573,6 @@ void main()
     //Before start ray marching, we have to transform the ray direction from
     //the u,v,z coord to the camera coord
     //the bigger z is, the less we can see through the screen
-    //  vec3 rd = normalize( viewport.x*cam.u + viewport.y*cam.v +  wideAngle * cam.w );
     vec3 rd = normalize(cam.trans * vec3(viewport, wideAngle));
 
     float diffuse = clamp(dot(rd,light),-.1, 1.);
@@ -600,16 +595,7 @@ void main()
     else
     {
         vec3 wpos = cam.pos + dist * rd;
-
-    //****BUG HERE****//
-    //Can not generate the terrain for now.
-    //The idea is that we generate both water and terrain here, if the ray hits the ground surface
-    //we know whether it hits on the water surface or terrain surface and render the pixel accordingly.
-        if(diff == 0.){
-            col = renderWater(wpos, dist, rd);
-        }else{
-        //       col = renderTerrain(wpos, rd, dist);
-        }
+        col = renderWater(wpos, dist, rd);
     }
 
     vec3 rainColor = renderWeather(cam,rd,dist,light);
@@ -621,13 +607,9 @@ void main()
 
     //**APPLY FOG AT LAST IF FOD EFFECT IS ENABLED**//
     //First line -> global constant fog
-    //Second line -> lighting fog
-    //Third line -> Height-based fog (***BUG***)
 
     if(renderFog){
-    //      col = distFog(col, dist);
         col = realFog(col, dist, rd, light);
-    //      col = heightFog(col, dist, campos, rd);
     }
 
     fragColor= col;
